@@ -1,0 +1,13 @@
+{
+  "itemGroup.createfreighttrains": "Example Mod Tab",
+  "block.createfreighttrains.example_block": "Example Block",
+  "item.createfreighttrains.example_item": "Example Item",
+
+  "createfreighttrains.configuration.title": "Create: Freight & Trains Configs",
+  "createfreighttrains.configuration.section.createfreighttrains.common.toml": "Create: Freight & Trains Configs",
+  "createfreighttrains.configuration.section.createfreighttrains.common.toml.title": "Create: Freight & Trains Configs",
+  "createfreighttrains.configuration.items": "Item List",
+  "createfreighttrains.configuration.logDirtBlock": "Log Dirt Block",
+  "createfreighttrains.configuration.magicNumberIntroduction": "Magic Number Text",
+  "createfreighttrains.configuration.magicNumber": "Magic Number"
+}
