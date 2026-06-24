@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.tags.ItemTags;
 
 
 public class StationRequesterBlock extends BaseEntityBlock{
@@ -54,7 +55,12 @@ public class StationRequesterBlock extends BaseEntityBlock{
         if (requested.isEmpty()) {
           message = Component.literal("No Current requests");
         } else {
-          String itemName = requested.getHoverName().getString();
+          String itemName;
+          if (requested.is(ItemTags.LOGS)) { // add more logic (coals, stones)
+            itemName = "Log";
+          } else {
+            itemName = requested.getHoverName().getString();
+          }
           int current = requester.getCurrentAmount();
           int target = requester.getTargetAmount();
           int stationLevel = requester.getStationLevel();

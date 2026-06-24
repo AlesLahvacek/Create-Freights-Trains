@@ -11,10 +11,12 @@ import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.tags.ItemTags;
 import java.util.List;
 import net.minecraft.util.RandomSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 
 public class StationRequesterEntity extends BlockEntity {
 
@@ -70,7 +72,14 @@ public class StationRequesterEntity extends BlockEntity {
         public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
 
         // check for item similarity
-        if (RequestItem.isEmpty() || !ItemStack.isSameItem(stack, RequestItem)) {
+        if (RequestItem.isEmpty()) {
+            return stack;
+        }
+
+        boolean isExactMatch = ItemStack.isSameItem(stack, RequestItem); // add more logic (coals, stones)
+        boolean isBothLog = stack.is(ItemTags.LOGS) && RequestItem.is(ItemTags.LOGS);
+
+        if (!isExactMatch && !isBothLog) {
             return stack;
         }
 
@@ -99,6 +108,9 @@ public class StationRequesterEntity extends BlockEntity {
 
                 rewardEntity.setDeltaMovement(0, 0.2, 0);
                 level.addFreshEntity(rewardEntity);
+
+                level.playSound(null, getBlockPos(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.BLOCKS, 1.0F, 1.2F);
+
                 generateNewContract();
             }
         }
