@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "createfreighttrains:block/cargo_inspector_front",
+    "side": "createfreighttrains:block/cargo_inspector_side",
+    "top": "createfreighttrains:block/cargo_inspector_top"
+  }
+}
