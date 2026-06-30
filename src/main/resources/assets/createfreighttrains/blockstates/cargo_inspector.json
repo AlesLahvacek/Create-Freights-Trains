@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "createfreighttrains:block/cargo_inspector" },
+    "facing=east":  { "model": "createfreighttrains:block/cargo_inspector", "y": 90 },
+    "facing=south": { "model": "createfreighttrains:block/cargo_inspector", "y": 180 },
+    "facing=west":  { "model": "createfreighttrains:block/cargo_inspector", "y": 270 }
+  }
+}

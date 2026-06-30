@@ -12,5 +12,9 @@ public class ModItems {
         "station_requester",
         ModBlocks.STATION_REQUESTER
     );
+    public static final DeferredItem<BlockItem> CARGO_INSPECTOR_ITEM = ITEMS.registerSimpleBlockItem(
+    "cargo_inspector", 
+    ModBlocks.CARGO_INSPECTOR
+    );
 
 }
