@@ -16,6 +16,8 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.stream.Collectors;
 
@@ -78,6 +80,25 @@ public class CargoInspectorBlockEntity extends BlockEntity {
         System.out.println("Generated new manifest for level: " + stationLevel + " with " + typesToRequest + " items!");
     }
 
+    public void completeContract() {
+        this.stationLevel++;
+        
+        if (this.level != null && !this.level.isClientSide()) {
+            int emeraldCount = Math.min(this.stationLevel, 64); // Max 1 stack
+            ItemStack reward = new ItemStack(Items.EMERALD, emeraldCount);
+            
+            ItemEntity rewardEntity = new ItemEntity(this.level, 
+                this.getBlockPos().getX() + 0.5, 
+                this.getBlockPos().getY() + 1.2, 
+                this.getBlockPos().getZ() + 0.5, 
+                reward
+            );
+            rewardEntity.setDeltaMovement(0, 0.2, 0);
+            this.level.addFreshEntity(rewardEntity);
+            generateNewManifest();
+        }
+    }
+
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
@@ -126,5 +147,14 @@ public class CargoInspectorBlockEntity extends BlockEntity {
         if (this.level != null && !this.level.isClientSide() && this.activeManifest.isEmpty()) {
             generateNewManifest();
         }
+    }
+
+    // --- GETTERS ---
+    public Map<Item, Integer> getActiveManifest() {
+        return activeManifest;
+    }
+
+    public int getStationLevel() {
+        return stationLevel;
     }
 }

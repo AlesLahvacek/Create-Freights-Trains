@@ -49,42 +49,82 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (!level.isClientSide()) {
             
-            // cord value of block face
+            BlockEntity be = level.getBlockEntity(pos);
+            if (!(be instanceof CargoInspectorBlockEntity inspector)) {
+                return InteractionResult.PASS;
+            }
+
+            // Get manifest
+            Map<Item, Integer> manifest = inspector.getActiveManifest();
+            
+            player.displayClientMessage(Component.literal("§6=== CARGO LIST (Level " + inspector.getStationLevel() + ") ==="), false);
+            if (manifest.isEmpty()) {
+                player.displayClientMessage(Component.literal("There is currently no request"), false);
+                return InteractionResult.sidedSuccess(false);
+            } else {
+                manifest.forEach((item, amount) -> {
+                    String itemName = new ItemStack(item).getHoverName().getString();
+                    player.displayClientMessage(Component.literal("§e- " + amount + "x §f" + itemName), false);
+                });
+            }
+            player.displayClientMessage(Component.literal("§6============================="), false);
+
+            // 2. Check if there is container
             Direction facing = state.getValue(FACING);
             BlockPos targetPos = pos.relative(facing);
-
-            // get inventory of adjanced block (IItemHandler)
             IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, targetPos, facing.getOpposite());
 
-            if (handler != null) {
-                // 3. Kontejner nalezen! Přečteme jeho obsah
-                player.displayClientMessage(Component.literal("Checking cargo..."), false);
+            if (handler == null) {
+                player.displayClientMessage(Component.literal("§c[No container found]"), false);
+                return InteractionResult.sidedSuccess(false);
+            }
+
+            Map<Item, Integer> contents = new HashMap<>();
+            for (int i = 0; i < handler.getSlots(); i++) {
+                ItemStack stack = handler.getStackInSlot(i);
+                if (!stack.isEmpty()) {
+                    contents.put(stack.getItem(), contents.getOrDefault(stack.getItem(), 0) + stack.getCount());
+                }
+            }
+
+            // Logic check
+            boolean hasAllRequirements = true;
+            for (Map.Entry<Item, Integer> entry : manifest.entrySet()) {
+                if (contents.getOrDefault(entry.getKey(), 0) < entry.getValue()) {
+                    hasAllRequirements = false;
+                    break;
+                }
+            }
+
+            // item removal
+            if (!hasAllRequirements) {
+                // Nemáme všechno, vypíšeme co chybí
+                player.displayClientMessage(Component.literal("§c[!] Delivery denied: Some items are missing"), false);
+                level.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
+            } else {
+                player.displayClientMessage(Component.literal("§a[!] Delivery successful! Container emptied"), false);
                 
-                // Vytvoříme si "Mapu" pro sečtení stejných itemů (ve Vaultu mohou být rozházené ve více slotech)
-                Map<Item, Integer> contents = new HashMap<>();
+                // new map to update the values mid process
+                Map<Item, Integer> toExtract = new HashMap<>(manifest);
                 
                 for (int i = 0; i < handler.getSlots(); i++) {
-                    ItemStack stack = handler.getStackInSlot(i);
-                    if (!stack.isEmpty()) {
-                        // Přičteme počet k už existujícímu záznamu, nebo založíme nový (getOrDefault)
-                        contents.put(stack.getItem(), contents.getOrDefault(stack.getItem(), 0) + stack.getCount());
+                    ItemStack stackInSlot = handler.getStackInSlot(i);
+                    if (stackInSlot.isEmpty()) continue;
+                    
+                    Item slotItem = stackInSlot.getItem();
+                    if (toExtract.containsKey(slotItem)) {
+                        int needed = toExtract.get(slotItem);
+                        if (needed > 0) {
+                            // physically remove the items (simulation to false)
+                            ItemStack extracted = handler.extractItem(i, needed, false);
+                            toExtract.put(slotItem, needed - extracted.getCount());
+                        }
                     }
                 }
 
-                // 4. Vypsání výsledků hráči
-                if (contents.isEmpty()) {
-                    player.displayClientMessage(Component.literal("Container is empty"), false);
-                } else {
-                    player.displayClientMessage(Component.literal("Items in container:"), false);
-                    contents.forEach((item, count) -> {
-                        String itemName = new ItemStack(item).getHoverName().getString();
-                        player.displayClientMessage(Component.literal("- " + count + "x " + itemName), false);
-                    });
-                }
-                
-            } else {
-                // Na těchto souřadnicích není nic s inventářem
-                player.displayClientMessage(Component.literal("No container to check"), true);
+                // sound
+                level.playSound(null, pos, net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
+                inspector.completeContract();
             }
         }
         
