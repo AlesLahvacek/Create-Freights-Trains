@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "createfreighttrains:block/depot_terminal_front",
+    "side": "createfreighttrains:block/depot_terminal_side",
+    "top": "createfreighttrains:block/depot_terminal_top"
+  }
+}

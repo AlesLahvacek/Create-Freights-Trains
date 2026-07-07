@@ -1,6 +1,9 @@
 package com.lahvacek.freight_trains.block;
 
 import com.lahvacek.freight_trains.block.CargoInspectorBlockEntity;
+import com.lahvacek.freight_trains.registry.ModItems;
+import com.lahvacek.freight_trains.item.*;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -20,9 +23,22 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
 import org.jetbrains.annotations.Nullable;
 
 public class CargoInspectorBlock  extends Block implements EntityBlock{
@@ -43,6 +59,51 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        if (stack.is(Items.PAPER)) {
+            if (!level.isClientSide()) {
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof CargoInspectorBlockEntity inspector) {
+                    if (!player.isCreative()) {
+                        stack.shrink(1);
+                    }
+
+                    ItemStack card = new ItemStack(ModItems.DESTINATION_CARD.get());
+
+                    // 3. NBT data
+                    CustomData.update(DataComponents.CUSTOM_DATA, card, tag -> {
+                        // ID + LVL
+                        tag.putUUID("TargetStationId", inspector.getStationId());
+                        tag.putInt("TargetStationLevel", inspector.getStationLevel());
+                        // Cargo manifest
+                        ListTag manifestList = new ListTag();
+                        for (Map.Entry<Item, Integer> entry : inspector.getActiveManifest().entrySet()) {
+                            CompoundTag itemTag = new CompoundTag();
+                            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(entry.getKey());
+                            itemTag.putString("Item", itemId.toString());
+                            itemTag.putInt("Amount", entry.getValue());
+                            manifestList.add(itemTag);
+                        }
+                        tag.put("TargetManifest", manifestList);
+                    });
+
+                    // drop if inventory full
+                    if (!player.getInventory().add(card)) {
+                        player.drop(card, false);
+                    }
+
+                    player.displayClientMessage(Component.literal("§a[!] Printed destination card "), true);
+                    level.playSound(null, pos, SoundEvents.VILLAGER_WORK_CARTOGRAPHER, SoundSource.BLOCKS, 1.0f, 1.0f);
+                }
+            }
+            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        }
+
+        // pass to useWithoutItem if no paper is held
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
     @Override
@@ -74,6 +135,35 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
             BlockPos targetPos = pos.relative(facing);
             IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, targetPos, facing.getOpposite());
 
+            ItemStack validWaybill = ItemStack.EMPTY;
+            int waybillSlot = -1;
+
+            for (int i = 0; i < handler.getSlots(); i++) {
+                ItemStack stackInSlot = handler.getStackInSlot(i);
+
+                if (stackInSlot.getItem() instanceof WayBillItem) {
+                    CustomData customData = stackInSlot.get(DataComponents.CUSTOM_DATA);
+                    
+                    if (customData != null && customData.copyTag().hasUUID("TargetStationId")) {
+                        UUID waybillId = customData.copyTag().getUUID("TargetStationId");
+
+                        if (waybillId.equals(inspector.getStationId())) {
+                            validWaybill = stackInSlot;
+                            waybillSlot = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (validWaybill.isEmpty()) {
+                player.displayClientMessage(Component.literal("§c[!] No cargo list present for this station"), false);
+                level.playSound(null, pos, SoundEvents.VILLAGER_NO, SoundSource.BLOCKS, 1.0f, 1.0f);
+                return InteractionResult.sidedSuccess(false);
+            }
+
+            player.displayClientMessage(Component.literal("§a[!] Cargo verified"), false);
+
             if (handler == null) {
                 player.displayClientMessage(Component.literal("§c[No container found]"), false);
                 return InteractionResult.sidedSuccess(false);
@@ -98,7 +188,7 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
 
             // item removal
             if (!hasAllRequirements) {
-                // Nemáme všechno, vypíšeme co chybí
+                // missing items
                 player.displayClientMessage(Component.literal("§c[!] Delivery denied: Some items are missing"), false);
                 level.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
             } else {
@@ -121,6 +211,8 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
                         }
                     }
                 }
+
+                handler.extractItem(waybillSlot, 1, false);
 
                 // sound
                 level.playSound(null, pos, net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);

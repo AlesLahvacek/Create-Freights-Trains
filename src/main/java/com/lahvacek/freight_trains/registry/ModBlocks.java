@@ -22,9 +22,15 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> STATION_REQUESTER = BLOCKS.register("station_requester", () -> new StationRequesterBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
     public static final DeferredBlock<Block> CARGO_INSPECTOR = BLOCKS.register("cargo_inspector", () -> new CargoInspectorBlock(Block.Properties.ofFullCopy(Blocks.OBSIDIAN)));
+    public static final DeferredBlock<Block> DEPOT_TERMINAL = BLOCKS.register("depot_terminal", () -> new DepotTerminalBlock(Block.Properties.ofFullCopy(Blocks.OBSIDIAN)));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StationRequesterEntity>> STATION_REQUESTER_BE = BLOCK_ENTITIES.register("station_requester_be",
          () -> BlockEntityType.Builder.of(StationRequesterEntity::new, STATION_REQUESTER.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DepotTerminalBlockEntity>> DEPOT_TERMINAL_BE = 
+    BLOCK_ENTITIES.register("depot_terminal_be", 
+        () -> BlockEntityType.Builder.of(DepotTerminalBlockEntity::new, ModBlocks.DEPOT_TERMINAL.get())
+            .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CargoInspectorBlockEntity>> CARGO_INSPECTOR_BE = 
     BLOCK_ENTITIES.register("cargo_inspector_be", 

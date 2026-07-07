@@ -30,6 +30,7 @@ public class CargoInspectorBlockEntity extends BlockEntity {
 
     // 1. Záznam pro základní definici předmětů v poolu
     private record BaseCargo(Item item, int baseMin, int baseMax, int unlockLevel) {}
+    private UUID stationId;
 
     // List of possible cargo options
     private static final List<BaseCargo> CARGO_POOL = List.of(
@@ -103,6 +104,9 @@ public class CargoInspectorBlockEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putInt("StationLevel", this.stationLevel);
+        if (this.stationId != null) {
+            tag.putUUID("StationId", this.stationId);
+        }
 
         // Manifest saving
         ListTag manifestList = new ListTag();
@@ -123,6 +127,9 @@ public class CargoInspectorBlockEntity extends BlockEntity {
         super.loadAdditional(tag, registries);
         if (tag.contains("StationLevel")) {
             this.stationLevel = tag.getInt("StationLevel");
+        }
+        if (tag.hasUUID("StationId")) {
+            this.stationId = tag.getUUID("StationId");
         }
 
         // Nmanifest loading
@@ -147,6 +154,11 @@ public class CargoInspectorBlockEntity extends BlockEntity {
         if (this.level != null && !this.level.isClientSide() && this.activeManifest.isEmpty()) {
             generateNewManifest();
         }
+
+        if (this.stationId == null) {
+            this.stationId = UUID.randomUUID();
+            setChanged();
+        }
     }
 
     // --- GETTERS ---
@@ -156,5 +168,9 @@ public class CargoInspectorBlockEntity extends BlockEntity {
 
     public int getStationLevel() {
         return stationLevel;
+    }
+
+    public UUID getStationId() {
+        return this.stationId;
     }
 }

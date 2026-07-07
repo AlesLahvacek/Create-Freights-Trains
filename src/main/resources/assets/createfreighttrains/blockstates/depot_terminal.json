@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "createfreighttrains:block/depot_terminal" },
+    "facing=east":  { "model": "createfreighttrains:block/depot_terminal", "y": 90 },
+    "facing=south": { "model": "createfreighttrains:block/depot_terminal", "y": 180 },
+    "facing=west":  { "model": "createfreighttrains:block/depot_terminal", "y": 270 }
+  }
+}
