@@ -24,13 +24,14 @@ import java.util.stream.Collectors;
 public class CargoInspectorBlockEntity extends BlockEntity {
 
     public CargoInspectorBlockEntity(BlockPos pos, BlockState state) {
-        // Zde si později doplníme správný odkaz na registraci
         super(ModBlocks.CARGO_INSPECTOR_BE.get(), pos, state);
     }
 
     // 1. Záznam pro základní definici předmětů v poolu
     private record BaseCargo(Item item, int baseMin, int baseMax, int unlockLevel) {}
     private UUID stationId;
+    private long cooldownUntil = 0;
+    private boolean nextRewardPenalized = false;
 
     // List of possible cargo options
     private static final List<BaseCargo> CARGO_POOL = List.of(
@@ -81,13 +82,20 @@ public class CargoInspectorBlockEntity extends BlockEntity {
         System.out.println("Generated new manifest for level: " + stationLevel + " with " + typesToRequest + " items!");
     }
 
-    public void completeContract() {
+    public void completeContract( boolean wasTooClose) {
         this.stationLevel++;
         
         if (this.level != null && !this.level.isClientSide()) {
             int emeraldCount = Math.min(this.stationLevel, 64); // Max 1 stack
-            ItemStack reward = new ItemStack(Items.EMERALD, emeraldCount);
+
+            if (this.nextRewardPenalized) {
+                emeraldCount = Math.max(1, emeraldCount / 2); 
+                this.nextRewardPenalized = false;
+            }
+
             
+
+            ItemStack reward = new ItemStack(Items.EMERALD, emeraldCount);
             ItemEntity rewardEntity = new ItemEntity(this.level, 
                 this.getBlockPos().getX() + 0.5, 
                 this.getBlockPos().getY() + 1.2, 
@@ -96,8 +104,23 @@ public class CargoInspectorBlockEntity extends BlockEntity {
             );
             rewardEntity.setDeltaMovement(0, 0.2, 0);
             this.level.addFreshEntity(rewardEntity);
+            if (wasTooClose) {
+                // 5 in-game days
+                this.cooldownUntil = this.level.getGameTime() + (5 * 24000);
+                this.nextRewardPenalized = true;
+            }
+
             generateNewManifest();
+            setChanged();
         }
+    }
+
+    public boolean isOnCooldown(long currentTime) {
+        return currentTime < this.cooldownUntil;
+    }
+
+    public long getRemainingCooldownTicks(long currentTime) {
+        return Math.max(0, this.cooldownUntil - currentTime);
     }
 
     @Override
@@ -107,6 +130,8 @@ public class CargoInspectorBlockEntity extends BlockEntity {
         if (this.stationId != null) {
             tag.putUUID("StationId", this.stationId);
         }
+        tag.putLong("CooldownUntil", this.cooldownUntil);
+        tag.putBoolean("NextRewardPenalized", this.nextRewardPenalized);
 
         // Manifest saving
         ListTag manifestList = new ListTag();
@@ -130,6 +155,12 @@ public class CargoInspectorBlockEntity extends BlockEntity {
         }
         if (tag.hasUUID("StationId")) {
             this.stationId = tag.getUUID("StationId");
+        }
+        if (tag.contains("CooldownUntil")) {
+            this.cooldownUntil = tag.getLong("CooldownUntil");
+        }
+        if (tag.contains("NextRewardPenalized")) {
+            this.nextRewardPenalized = tag.getBoolean("NextRewardPenalized");
         }
 
         // Nmanifest loading

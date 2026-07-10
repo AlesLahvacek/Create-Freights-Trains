@@ -67,6 +67,15 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
             if (!level.isClientSide()) {
                 BlockEntity be = level.getBlockEntity(pos);
                 if (be instanceof CargoInspectorBlockEntity inspector) {
+                    long currentTime = level.getGameTime();
+                if (inspector.isOnCooldown(currentTime)) {
+                    long ticksLeft = inspector.getRemainingCooldownTicks(currentTime);
+                    int daysLeft = (int) Math.ceil(ticksLeft / 24000.0);
+                    
+                    player.displayClientMessage(Component.literal("§c[!] Local demand too low | no new requests"), true);
+                    player.displayClientMessage(Component.literal("§cTry again in " + daysLeft + " days"), false);
+                    return ItemInteractionResult.sidedSuccess(false);
+                }
                     if (!player.isCreative()) {
                         stack.shrink(1);
                     }
@@ -114,6 +123,15 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
             if (!(be instanceof CargoInspectorBlockEntity inspector)) {
                 return InteractionResult.PASS;
             }
+            long currentTime = level.getGameTime();
+                if (inspector.isOnCooldown(currentTime)) {
+                    long ticksLeft = inspector.getRemainingCooldownTicks(currentTime);
+                    int daysLeft = (int) Math.ceil(ticksLeft / 24000.0);
+                    
+                    player.displayClientMessage(Component.literal("§c[!] Local demand too low | no new requests"), true);
+                    player.displayClientMessage(Component.literal("§cTry again in " + daysLeft + " days"), false);
+                    return InteractionResult.sidedSuccess(false);
+                }
 
             // Get manifest
             Map<Item, Integer> manifest = inspector.getActiveManifest();
@@ -169,6 +187,28 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
                 return InteractionResult.sidedSuccess(false);
             }
 
+            boolean isTooClose = false;
+
+            CompoundTag wbTag = validWaybill.get(DataComponents.CUSTOM_DATA).copyTag();
+            if (wbTag.contains("DepotX")) {
+                int startX = wbTag.getInt("DepotX");
+                int startY = wbTag.getInt("DepotY");
+                int startZ = wbTag.getInt("DepotZ");
+
+                BlockPos startPos = new BlockPos(startX, startY, startZ);
+                double distance = Math.sqrt(pos.distSqr(startPos));
+                double minDistance = 300.0; 
+
+                if (distance < minDistance) {
+                    isTooClose = true;
+                    player.displayClientMessage(Component.literal("§e[!] Cargo list accepted, however destination is too close (" + (int)distance + " m)"), false);
+                    player.displayClientMessage(Component.literal("§cIf delivered station will stop demanding for next 5 days"), false);
+                    level.playSound(null, pos, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 1.0f, 0.5f);
+                } else {
+                    player.displayClientMessage(Component.literal("§a[!] Distance to destination (" + (int)distance + " m)."), false);
+                }
+            }
+
             Map<Item, Integer> contents = new HashMap<>();
             for (int i = 0; i < handler.getSlots(); i++) {
                 ItemStack stack = handler.getStackInSlot(i);
@@ -216,7 +256,7 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
 
                 // sound
                 level.playSound(null, pos, net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
-                inspector.completeContract();
+                inspector.completeContract(isTooClose);
             }
         }
         
