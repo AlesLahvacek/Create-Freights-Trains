@@ -94,8 +94,8 @@ public class DepotTerminalBlock extends Block implements EntityBlock {
                 Map<UUID, Integer> known = depotBE.getKnownStations();
                 if (known.containsKey(targetId)) {
                     int knownLevel = known.get(targetId);
-                    
-                    if (cardLevel < knownLevel) {
+                    System.out.println(knownLevel);
+                    if (cardLevel <= knownLevel) {
                         // remove old cargo list
                         player.displayClientMessage(Component.literal("§cOutdate destination card, removing... " + knownLevel + "."), false);
                         level.playSound(null, pos, SoundEvents.UI_STONECUTTER_TAKE_RESULT, SoundSource.BLOCKS, 1.0f, 1.5f);
@@ -105,10 +105,10 @@ public class DepotTerminalBlock extends Block implements EntityBlock {
                         }
                         return ItemInteractionResult.sidedSuccess(false);
                     }
-                }
+                } else { System.out.println("chybe zde");}
 
                 // Pokud jsme prošli auditem, můžeme si paměť aktualizovat
-                depotBE.updateStationLevel(targetId, cardLevel);
+                
 
                 Direction facing = state.getValue(FACING);
                 BlockPos targetPos = pos.relative(facing);
@@ -204,7 +204,7 @@ public class DepotTerminalBlock extends Block implements EntityBlock {
                 if (!player.isCreative()) {
                     stack.shrink(1);
                 }
-                
+                depotBE.updateStationLevel(targetId, cardLevel);
                 player.displayClientMessage(Component.literal("§aCargo list accepted, ready to ship"), false);
                 level.playSound(null, pos, SoundEvents.UI_STONECUTTER_TAKE_RESULT, SoundSource.BLOCKS, 1.0f, 0.8f);
             }
