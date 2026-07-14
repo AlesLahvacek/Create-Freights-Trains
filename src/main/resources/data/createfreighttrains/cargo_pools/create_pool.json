@@ -1,0 +1,68 @@
+{
+  "pool_name": "Create Items",
+  "entries": [
+    {
+      "item": "create:andesite_alloy",
+      "min_level": 1,
+      "max_level": 50,
+      "min_amount": 64,
+      "max_amount": 512
+    },
+    {
+      "item": "create:shaft",
+      "min_level": 1,
+      "max_level": 20,
+      "min_amount": 64,
+      "max_amount": 256
+    },
+    {
+      "item": "create:cogwheel",
+      "min_level": 2,
+      "max_level": 30,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "create:large_cogwheel",
+      "min_level": 2,
+      "max_level": 30,
+      "min_amount": 16,
+      "max_amount": 64
+    },
+    {
+      "item": "create:brass_ingot",
+      "min_level": 8,
+      "max_level": 50,
+      "min_amount": 64,
+      "max_amount": 256
+    },
+    {
+      "item": "create:electron_tube",
+      "min_level": 12,
+      "max_level": 50,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "create:brass_casing",
+      "min_level": 15,
+      "max_level": 50,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "create:precision_mechanism",
+      "min_level": 20,
+      "max_level": 50,
+      "min_amount": 8,
+      "max_amount": 64
+    },
+    {
+      "item": "create:sturdy_sheet",
+      "min_level": 25,
+      "max_level": 50,
+      "min_amount": 16,
+      "max_amount": 64
+    }
+  ]
+}

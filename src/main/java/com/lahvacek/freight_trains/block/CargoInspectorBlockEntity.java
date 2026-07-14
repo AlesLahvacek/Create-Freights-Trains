@@ -3,9 +3,11 @@ package com.lahvacek.freight_trains.block;
 import java.util.*;
 
 import com.lahvacek.freight_trains.registry.*;
+import com.lahvacek.freight_trains.util.CargoEntry;
+import com.lahvacek.freight_trains.util.CargoPoolManager;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -18,6 +20,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.stream.Collectors;
 
@@ -34,52 +38,62 @@ public class CargoInspectorBlockEntity extends BlockEntity {
     private boolean nextRewardPenalized = false;
 
     // List of possible cargo options
-    private static final List<BaseCargo> CARGO_POOL = List.of(
-        new BaseCargo(Items.OAK_LOG, 100, 300, 1),
-        new BaseCargo(Items.STONE, 200, 500, 1),
-        new BaseCargo(Items.IRON_INGOT, 150, 400, 1),
-        new BaseCargo(Items.COPPER_INGOT, 200, 500, 3),
-        new BaseCargo(Items.REDSTONE, 300, 800, 5),
-        new BaseCargo(Items.GOLD_INGOT, 50, 150, 5),
-        new BaseCargo(Items.DIAMOND, 10, 30, 10)
-    );
+    // private static final List<BaseCargo> CARGO_POOL = List.of(
+    //     new BaseCargo(Items.OAK_LOG, 100, 300, 1),
+    //     new BaseCargo(Items.STONE, 200, 500, 1),
+    //     new BaseCargo(Items.IRON_INGOT, 150, 400, 1),
+    //     new BaseCargo(Items.COPPER_INGOT, 200, 500, 3),
+    //     new BaseCargo(Items.REDSTONE, 300, 800, 5),
+    //     new BaseCargo(Items.GOLD_INGOT, 50, 150, 5),
+    //     new BaseCargo(Items.DIAMOND, 10, 30, 10)
+    // );
     private int stationLevel = 1;
     
     // Map containing current values for delivery
     private final Map<Item, Integer> activeManifest = new HashMap<>();
 
     public void generateNewManifest() {
+        if (this.level != null && this.level.isClientSide()) {
+            return;
+        }
+
         RandomSource random = (this.level != null) ? this.level.random : RandomSource.create();
         this.activeManifest.clear();
 
-        // level based filter
-        List<BaseCargo> available = CARGO_POOL.stream()
-            .filter(c -> this.stationLevel >= c.unlockLevel())
-            .collect(Collectors.toList());
+        if (!CargoPoolManager.INSTANCE.hasAnyEntries() && this.level != null) {
+            CargoPoolManager.INSTANCE.loadFromResources(this.level.getServer().getResourceManager());
+        }
 
-        Collections.shuffle(available);
+        List<CargoEntry> availablePool = CargoPoolManager.INSTANCE.getPoolForLevel(this.stationLevel);
 
-        
+        if (availablePool.isEmpty()) {
+            System.out.println("No cargo pool entries available for station level " + this.stationLevel + " yet.");
+            return;
+        }
+
+        Collections.shuffle(availablePool);
+
         // current limiting is set to min of unlocked resources
-        int typesToRequest = random.nextInt(5) + 2; // 2 to 6
-        typesToRequest = Math.min(typesToRequest, available.size());
+        int numItemsRequested = random.nextInt(5) + 2; // 2 to 6
+        numItemsRequested = Math.min(numItemsRequested, availablePool.size());
 
-        for (int i = 0; i < typesToRequest; i++) {
-            BaseCargo chosen = available.get(i);
-
-            double multiplier = 1.0 + ((this.stationLevel - chosen.unlockLevel()) * 0.15);
+        for (int i = 0; i < numItemsRequested; i++) {
+            CargoEntry entry = availablePool.get(this.level.random.nextInt(availablePool.size()));
             
-            int min = (int) (chosen.baseMin() * multiplier);
-            int max = (int) (chosen.baseMax() * multiplier);
+            // Parsing String to minecraft item ID
+            ResourceLocation itemId = ResourceLocation.parse(entry.itemId());
+            Item item = BuiltInRegistries.ITEM.get(itemId);
             
-            int finalAmount = (max <= min) ? min : random.nextInt(max - min + 1) + min;
-
-            this.activeManifest.put(chosen.item(), finalAmount);
+            // Random amount of chosen Item (in min max boundaries) 
+            int amount = entry.minAmount() + this.level.random.nextInt((entry.maxAmount() - entry.minAmount()) + 1);
+            
+            // Write to manifest (can accept same Item multiple times, in that case the values add up)
+            this.activeManifest.put(item, this.activeManifest.getOrDefault(item, 0) + amount);
         }
         
         setChanged();
         
-        System.out.println("Generated new manifest for level: " + stationLevel + " with " + typesToRequest + " items!");
+        System.out.println("Generated new manifest for level: " + stationLevel + " with " + numItemsRequested + " items!");
     }
 
     public void completeContract( boolean wasTooClose) {

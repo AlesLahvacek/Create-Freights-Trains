@@ -1,0 +1,159 @@
+{
+  "pool_name": "Minecraft Items",
+  "entries": [
+    {
+      "item": "minecraft:oak_log",
+      "min_level": 1,
+      "max_level": 20,
+      "min_amount": 128,
+      "max_amount": 512
+    },
+    {
+      "item": "minecraft:stone",
+      "min_level": 1,
+      "max_level": 30,
+      "min_amount": 256,
+      "max_amount": 1024
+    },
+    {
+      "item": "minecraft:iron_ingot",
+      "min_level": 2,
+      "max_level": 50,
+      "min_amount": 64,
+      "max_amount": 256
+    },
+    {
+      "item": "minecraft:copper_ingot",
+      "min_level": 2,
+      "max_level": 50,
+      "min_amount": 128,
+      "max_amount": 512
+    },
+    {
+      "item": "minecraft:gold_ingot",
+      "min_level": 5,
+      "max_level": 50,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "minecraft:redstone",
+      "min_level": 5,
+      "max_level": 50,
+      "min_amount": 128,
+      "max_amount": 512
+    },
+    {
+      "item": "minecraft:quartz",
+      "min_level": 10,
+      "max_level": 50,
+      "min_amount": 64,
+      "max_amount": 256
+    },
+    {
+      "item": "minecraft:diamond",
+      "min_level": 15,
+      "max_level": 50,
+      "min_amount": 8,
+      "max_amount": 32
+    },
+    {
+      "item": "minecraft:obsidian",
+      "min_level": 15,
+      "max_level": 50,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "minecraft:cobblestone",
+      "min_level": 1,
+      "max_level": 15,
+      "min_amount": 256,
+      "max_amount": 1024
+    },
+    {
+      "item": "minecraft:wheat",
+      "min_level": 1,
+      "max_level": 20,
+      "min_amount": 64,
+      "max_amount": 256
+    },
+    {
+      "item": "minecraft:sugar_cane",
+      "min_level": 2,
+      "max_level": 30,
+      "min_amount": 128,
+      "max_amount": 512
+    },
+    {
+      "item": "minecraft:kelp",
+      "min_level": 2,
+      "max_level": 20,
+      "min_amount": 128,
+      "max_amount": 512
+    },
+    {
+      "item": "minecraft:pumpkin",
+      "min_level": 3,
+      "max_level": 30,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "minecraft:melon_slice",
+      "min_level": 3,
+      "max_level": 30,
+      "min_amount": 128,
+      "max_amount": 512
+    },
+    {
+      "item": "minecraft:bone",
+      "min_level": 3,
+      "max_level": 40,
+      "min_amount": 64,
+      "max_amount": 256
+    },
+    {
+      "item": "minecraft:string",
+      "min_level": 3,
+      "max_level": 35,
+      "min_amount": 64,
+      "max_amount": 256
+    },
+    {
+      "item": "minecraft:gunpowder",
+      "min_level": 10,
+      "max_level": 50,
+      "min_amount": 64,
+      "max_amount": 192
+    },
+    {
+      "item": "minecraft:leather",
+      "min_level": 5,
+      "max_level": 35,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "minecraft:ink_sac",
+      "min_level": 6,
+      "max_level": 35,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "minecraft:slime_ball",
+      "min_level": 8,
+      "max_level": 45,
+      "min_amount": 32,
+      "max_amount": 128
+    },
+    {
+      "item": "minecraft:ender_pearl",
+      "min_level": 20,
+      "max_level": 50,
+      "min_amount": 16,
+      "max_amount": 64
+    }
+  ]
+}

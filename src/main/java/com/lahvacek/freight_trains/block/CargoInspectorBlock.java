@@ -136,6 +136,11 @@ public class CargoInspectorBlock  extends Block implements EntityBlock{
             // Get manifest
             Map<Item, Integer> manifest = inspector.getActiveManifest();
             
+            if (manifest.isEmpty()) {
+                inspector.generateNewManifest();
+                manifest = inspector.getActiveManifest();
+            }
+            
             player.displayClientMessage(Component.literal("§6=== CARGO LIST (Level " + inspector.getStationLevel() + ") ==="), false);
             if (manifest.isEmpty()) {
                 player.displayClientMessage(Component.literal("There is currently no request"), false);

@@ -3,6 +3,7 @@ package com.lahvacek.freight_trains;
 import org.slf4j.Logger;
 
 import com.lahvacek.freight_trains.registry.ModBlocks;
+import com.lahvacek.freight_trains.registry.ModCapabilities;
 import com.lahvacek.freight_trains.registry.ModItems;
 import com.mojang.logging.LogUtils;
 
@@ -34,6 +35,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(CreateFreightTrains.MODID)
 public class CreateFreightTrains {
@@ -44,7 +46,11 @@ public class CreateFreightTrains {
         ModItems.ITEMS.register(modEventBus);
         ModBlocks.BLOCKS.register(modEventBus);
         ModBlocks.BLOCK_ENTITIES.register(modEventBus);
+        modEventBus.addListener(ModCapabilities::registerCapabilities);
+        NeoForge.EVENT_BUS.addListener(ModCapabilities::onAddReloadListeners);
     }
+
+    
 
     public static final Logger LOGGER = LogUtils.getLogger();
 }
