@@ -3,6 +3,7 @@ package com.lahvacek.freight_trains.block;
 import com.lahvacek.freight_trains.CreateFreightTrains;
 import com.lahvacek.freight_trains.menu.StationRequesterMenu;
 import com.lahvacek.freight_trains.registry.ModBlocks;
+import com.lahvacek.freight_trains.menu.*;
 import net.minecraft.core.BlockPos;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -57,15 +58,15 @@ public class StationRequesterBlock extends BaseEntityBlock{
 
             if (be instanceof StationRequesterEntity requester && player instanceof ServerPlayer serverPlayer) {
 
-                // Připravíme data z tvé BlockEntity
-                ItemStack requested = requester.getRequestedItem();
-                int current = requester.getCurrentAmount();
-                int target = requester.getTargetAmount();
+                // STARÝ KÓD, KTERÝ MAŽEME:
+                // ItemStack requested = requester.getRequestedItem();
+                // int current = requester.getCurrentAmount();
+                // int target = requester.getTargetAmount();
 
-                // ZATÍM PROVIZORNÍ ODMĚNA (Později napojíme na dynamický systém)
+                // ZATÍM PROVIZORNÍ ODMĚNA (Zůstává)
                 ItemStack reward = new ItemStack(Items.EMERALD, 5);
 
-                // Zavoláme NeoForge API pro otevření okna a poslání dat
+                // Zavoláme NeoForge API pro otevření okna
                 serverPlayer.openMenu(new MenuProvider() {
                     @Override
                     public Component getDisplayName() {
@@ -74,17 +75,21 @@ public class StationRequesterBlock extends BaseEntityBlock{
 
                     @Override
                     public AbstractContainerMenu createMenu(int windowId, Inventory inv, Player player) {
-                        // Předáváme requester.data místo konkrétních čísel
-                        return new StationRequesterMenu(windowId, inv, requested, reward, requester.data);
+                        // Předáváme CELÝ SEZNAM (requester.requestedItems) a naše upravená data
+                        return new StationRequesterMenu(windowId, inv, requester.requestedItems, reward, requester.data);
                     }
                 }, buffer -> {
-                    // Do jednorázového bufferu už balíme JEN statické itemy
-                    ItemStack.STREAM_CODEC.encode(buffer, requested);
+                    // Pošleme klientovi nejdřív počet itemů a pak jeden po druhém
+                    buffer.writeInt(requester.requestedItems.size());
+                    for (ItemStack item : requester.requestedItems) {
+                        ItemStack.STREAM_CODEC.encode(buffer, item);
+                    }
+                    // Nakonec pošleme odměnu
                     ItemStack.STREAM_CODEC.encode(buffer, reward);
                 });
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
-  }
+    }
 
 }

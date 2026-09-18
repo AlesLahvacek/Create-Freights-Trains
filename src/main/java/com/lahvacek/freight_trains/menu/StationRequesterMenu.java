@@ -1,5 +1,8 @@
 package com.lahvacek.freight_trains.menu;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.lahvacek.freight_trains.registry.ModMenuTypes;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -11,35 +14,38 @@ import net.minecraft.world.item.ItemStack;
 
 public class StationRequesterMenu extends AbstractContainerMenu {
 
-    public final ItemStack requestedItem;
+    public final List<ItemStack> requestedItems = new ArrayList<>();
     public final ItemStack rewardItem;
-    private final ContainerData data; // Přidáno
+    private final ContainerData data;
 
     // Konstruktor volaný na KLIENTOVI
     public StationRequesterMenu(int windowId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         super(ModMenuTypes.STATION_REQUESTER_MENU.get(), windowId);
 
-        this.requestedItem = ItemStack.STREAM_CODEC.decode(buf);
-        this.rewardItem = ItemStack.STREAM_CODEC.decode(buf);
+        int itemCount = buf.readInt();
+        for (int i = 0; i < itemCount; i++) {
+            this.requestedItems.add(ItemStack.STREAM_CODEC.decode(buf));
+        }
 
-        // Klient si vytvoří prázdná data, která mu server bude automaticky přepisovat
-        this.data = new SimpleContainerData(2);
-        this.addDataSlots(this.data); // TOTO JE KLÍČOVÉ PRO ŽIVOU SYNCHRONIZACI
+        this.rewardItem = ItemStack.STREAM_CODEC.decode(buf);
+        this.data = new SimpleContainerData(8);
+        this.addDataSlots(this.data);
     }
 
     // Konstruktor volaný na SERVERU
-    public StationRequesterMenu(int windowId, Inventory playerInventory, ItemStack reqItem, ItemStack rewItem, ContainerData data) {
+    public StationRequesterMenu(int windowId, Inventory playerInventory, List<ItemStack> reqItems, ItemStack rewItem, ContainerData data) {
         super(ModMenuTypes.STATION_REQUESTER_MENU.get(), windowId);
-        this.requestedItem = reqItem;
+        this.requestedItems.addAll(reqItems);
         this.rewardItem = rewItem;
         this.data = data;
-
-        this.addDataSlots(this.data); // TOTO JE KLÍČOVÉ
+        this.addDataSlots(this.data);
     }
 
-    // Pomocné metody pro získání čísel v grafice
-    public int getCurrentAmount() { return this.data.get(0); }
-    public int getTargetAmount() { return this.data.get(1); }
+    // Pomocné metody pro Screen
+    public int getCurrentAmount(int index) { return this.data.get(index); }
+    public int getTargetAmount(int index) { return this.data.get(index + 4); }
+
+
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
