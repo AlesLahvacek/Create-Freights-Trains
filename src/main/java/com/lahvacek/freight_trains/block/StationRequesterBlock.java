@@ -74,13 +74,12 @@ public class StationRequesterBlock extends BaseEntityBlock{
 
                     @Override
                     public AbstractContainerMenu createMenu(int windowId, Inventory inv, Player player) {
-                        return new StationRequesterMenu(windowId, inv, requested, current, target, reward);
+                        // Předáváme requester.data místo konkrétních čísel
+                        return new StationRequesterMenu(windowId, inv, requested, reward, requester.data);
                     }
                 }, buffer -> {
-                    // Zde zapisujeme data do balíčku, který se pošle klientovi (musí sedět s konstruktorem z Kroku 1)
+                    // Do jednorázového bufferu už balíme JEN statické itemy
                     ItemStack.STREAM_CODEC.encode(buffer, requested);
-                    buffer.writeInt(current);
-                    buffer.writeInt(target);
                     ItemStack.STREAM_CODEC.encode(buffer, reward);
                 });
             }

@@ -1,9 +1,15 @@
 package com.lahvacek.freight_trains.block;
 
 import com.lahvacek.freight_trains.registry.ModBlocks;
+import com.lahvacek.freight_trains.util.CargoEntry;
+import com.lahvacek.freight_trains.util.CargoPoolManager;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -11,6 +17,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.tags.ItemTags;
 import java.util.List;
 import net.minecraft.util.RandomSource;
@@ -137,24 +144,37 @@ public class StationRequesterEntity extends BlockEntity {
     };
 
     // --- Item selection per level ---
-    private void generateNewContract(){
+    public void generateNewContract() {
+        // Získáme generátor náhody (pokud level ještě není načtený, vytvoříme dočasný)
         RandomSource random = (this.level != null) ? this.level.random : RandomSource.create();
-        List<ContractOption> availablePool = ALL_CONTRACTS.stream().filter(contract -> this.stationLevel >= contract.unlockLevel()).toList();
-        ContractOption chosen = availablePool.get(random.nextInt(availablePool.size()));
 
-        double multiplier = 1.0 + (this.stationLevel * 0.15);
-        double itemSpecificMultiplier = 1.0 + (this.stationLevel - chosen.unlockLevel() * 0.15);
-        int finalMin = (int) (chosen.minAmount() * itemSpecificMultiplier);
-        int finalMax = (int) (chosen.maxAmount() * itemSpecificMultiplier);
-        this.RequestItem = new ItemStack(chosen.item());
+        // 1. Získáme dostupný seznam surovin z JSONu pro aktuální level stanice
+        List<CargoEntry> availablePool = CargoPoolManager.INSTANCE.getPoolForLevel(this.stationLevel);
 
-        if (finalMax <= finalMin) {
-            this.targetAmount = finalMin;
-        } else {
-            this.targetAmount = random.nextInt(finalMax - finalMin + 1) +finalMin;
+        if (availablePool.isEmpty()) {
+            return; // Ochrana: Pokud JSON manažer nevrátí nic, generování přerušíme[cite: 4]
         }
-        setChanged();
-        }
+
+        // 2. Výběr jednoho náhodného kontraktu z platného poolu
+        CargoEntry chosen = availablePool.get(random.nextInt(availablePool.size()));
+
+        // 3. Převod Stringu z JSONu (např. "minecraft:stone") na reálný Minecraft Item[cite: 4]
+        ResourceLocation itemId = ResourceLocation.parse(chosen.itemId());
+        Item item = BuiltInRegistries.ITEM.get(itemId);
+
+        // 4. Vygenerování náhodného množství mezi min a max[cite: 4]
+        int amount = chosen.minAmount() + random.nextInt((chosen.maxAmount() - chosen.minAmount()) + 1);
+
+        // 5. Zápis do proměnných naší BlockEntity
+        this.RequestItem = new ItemStack(item);
+        this.targetAmount = amount;
+        this.currentAmount = 0;
+
+        // Uložení změn na disk
+        this.setChanged();
+
+        System.out.println("Vygenerován kontrakt pro Station Requester Lvl " + this.stationLevel + ": " + this.targetAmount + "x " + this.RequestItem.getHoverName().getString());
+    }
 
 
 // --- DISK WRITE ---
@@ -194,6 +214,32 @@ public class StationRequesterEntity extends BlockEntity {
         }
 
     }
+
+    // --- Container data for menu
+
+    public final ContainerData data = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> currentAmount;
+                case 1 -> targetAmount;
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0 -> currentAmount = value;
+                case 1 -> targetAmount = value;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 2; // Máme dvě čísla k synchronizaci
+        }
+    };
 
 // --- GETTERS ---
 
