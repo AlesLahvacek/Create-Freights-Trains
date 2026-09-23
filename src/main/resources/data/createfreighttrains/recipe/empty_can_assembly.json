@@ -1,0 +1,50 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "create:iron_sheet"
+  },
+  "transitional_item": {
+    "id": "createfreighttrains:empty_can",
+    "count": 1
+  },
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createfreighttrains:empty_can"
+        },
+        {
+          "item": "minecraft:iron_nugget"
+        }
+      ],
+      "results": [
+        {
+          "id": "createfreighttrains:empty_can",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "createfreighttrains:empty_can"
+        }
+      ],
+      "results": [
+        {
+          "id": "createfreighttrains:empty_can",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "id": "createfreighttrains:empty_can",
+      "count": 4
+    }
+  ],
+  "loops": 1
+}

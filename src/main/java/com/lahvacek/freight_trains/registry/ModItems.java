@@ -1,8 +1,12 @@
 package com.lahvacek.freight_trains.registry;
 
+import com.lahvacek.freight_trains.item.CannedBeef;
 import com.lahvacek.freight_trains.item.DestinationCardItem;
+import com.lahvacek.freight_trains.item.EmptyCan;
+import com.lahvacek.freight_trains.item.IncompleteCannedFood;
 import com.lahvacek.freight_trains.item.WayBillItem;
 
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -17,7 +21,7 @@ public class ModItems {
         ModBlocks.STATION_REQUESTER
     );
     public static final DeferredItem<BlockItem> CARGO_INSPECTOR_ITEM = ITEMS.registerSimpleBlockItem(
-        "cargo_inspector", 
+        "cargo_inspector",
         ModBlocks.CARGO_INSPECTOR
     );
     public static final DeferredItem<BlockItem> DEPOT_TERMINAL = ITEMS.registerSimpleBlockItem(
@@ -25,11 +29,27 @@ public class ModItems {
         ModBlocks.DEPOT_TERMINAL);
 
     // --- ITEMS ---
-    public static final DeferredItem<Item> DESTINATION_CARD = ITEMS.register("destination_card", 
+    public static final DeferredItem<Item> DESTINATION_CARD = ITEMS.register("destination_card",
     () -> new DestinationCardItem(new Item.Properties()
             .stacksTo(1)));
-    public static final DeferredItem<Item> WAYBILL = ITEMS.register("waybill", 
+    public static final DeferredItem<Item> WAYBILL = ITEMS.register("waybill",
     () -> new WayBillItem(new Item.Properties()
             .stacksTo(1)));
-
+    public static final DeferredItem<Item> EMPTY_CAN = ITEMS.register("empty_can",
+    () -> new EmptyCan(new Item.Properties()
+            .stacksTo(64)));
+    public static final DeferredItem<Item> INCOMPLETE_CANNED_FOOD = ITEMS.register("incomplete_canned_food",
+    () -> new IncompleteCannedFood(new Item.Properties()
+            .stacksTo(64)));
+    public static final DeferredItem<Item> CANNED_BEEF = ITEMS.registerItem(
+    "canned_beef",
+    CannedBeef::new,
+    new Item.Properties()
+        .stacksTo(64)
+        .food(new FoodProperties.Builder()
+            .nutrition(16) // 16 bodů = 8 celých stehýnek v UI (dvojnásobek normálního steaku)
+            .saturationModifier(1.0f) // 1.0f zajistí plnou (maximální) saturaci
+            .build()
+        )
+);
 }

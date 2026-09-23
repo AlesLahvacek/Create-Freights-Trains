@@ -1,0 +1,84 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "createfreighttrains:empty_can"
+  },
+  "transitional_item": {
+    "id": "createfreighttrains:incomplete_canned_food",
+    "count": 1
+  },
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createfreighttrains:incomplete_canned_food"
+        },
+        {
+          "item": "minecraft:cooked_beef"
+        }
+      ],
+      "results": [
+        {
+          "id": "createfreighttrains:incomplete_canned_food",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createfreighttrains:incomplete_canned_food"
+        },
+        {
+          "item": "minecraft:cooked_beef"
+        }
+      ],
+      "results": [
+        {
+          "id": "createfreighttrains:incomplete_canned_food",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "createfreighttrains:incomplete_canned_food"
+        },
+        {
+          "item": "minecraft:iron_nugget"
+        }
+      ],
+      "results": [
+        {
+          "id": "createfreighttrains:incomplete_canned_food",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "createfreighttrains:incomplete_canned_food"
+        }
+      ],
+      "results": [
+        {
+          "id": "createfreighttrains:incomplete_canned_food",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "id": "createfreighttrains:canned_beef",
+      "count": 1
+    }
+  ],
+  "loops": 1
+}

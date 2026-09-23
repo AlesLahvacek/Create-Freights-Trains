@@ -56,41 +56,59 @@ public class StationRequesterScreen extends AbstractContainerScreen<StationReque
         guiGraphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight, 256, 256);
     }
 
+    // TODO maybe replace items text with hover over the item to display its name
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
 
         if (!this.isUpgradeTab) {
-            // --- JSME NA ZÁLOŽCE CONTRACT ---
-            guiGraphics.drawString(this.font, "Contract", 20, 10, 0x404040, false);
-            guiGraphics.drawString(this.font, "Reward", 160, 10, 0x404040, false);
+            // --- NADPISY (Matematicky zarovnané na střed panelů) ---
+            // Střed levého panelu posunut z 64 na 68, aby se vyhnul levému okraji textury
+            int leftPanelCenter = 68;
+            String contractText = "Contract";
+            int contractWidth = this.font.width(contractText);
+            guiGraphics.drawString(this.font, contractText, leftPanelCenter - (contractWidth / 2), 10, 0x404040, false);
+
+            // Pravý panel zůstává na 192
+            String rewardText = "Reward";
+            int rewardWidth = this.font.width(rewardText);
+            guiGraphics.drawString(this.font, rewardText, 192 - (rewardWidth / 2), 10, 0x404040, false);
 
             // --- LEVÝ PANEL: Mřížka požadovaných itemů (max 4) ---
-            int startX = 35; // Střed levého sloupce
-            int startY = 35; // Výchozí Y souřadnice pro první řádek
-            int colSpacing = 60; // Mezera mezi sloupci
-            int rowSpacing = 45; // Mezera mezi řádky
+            int startX = 40;
+            int startY = 35;
+            int colSpacing = 56;
+            int rowSpacing = 45;
 
             for (int i = 0; i < this.menu.requestedItems.size(); i++) {
                 ItemStack item = this.menu.requestedItems.get(i);
                 if (item.isEmpty()) continue;
 
-                // Matematika pro určení sloupce (0 nebo 1) a řádku (0 nebo 1)
                 int col = i % 2;
                 int row = i / 2;
 
-                // Výpočet přesného středu pro tento konkrétní item
                 int centerX = startX + (col * colSpacing);
                 int currentY = startY + (row * rowSpacing);
 
-                // 1. Vykreslení ikony (-8 posouvá ikonu na střed, protože má 16x16)
+                // 1. Ikona (Zůstává normální 16x16)
                 guiGraphics.renderItem(item, centerX - 8, currentY);
 
-                // 2. Název Itemu zarovnaný na střed
+                // 2. Název (Zmenšený na 80 %)
                 String itemName = item.getHoverName().getString();
                 int nameWidth = this.font.width(itemName);
-                guiGraphics.drawString(this.font, itemName, centerX - (nameWidth / 2), currentY + 20, 0x404040, false);
 
-                // 3. Postup (např. 0/512)
+                guiGraphics.pose().pushPose(); // Uložíme aktuální stav
+                float scale = 0.8f;
+                guiGraphics.pose().scale(scale, scale, 1.0f); // Zmenšíme měřítko
+
+                // Přepočet souřadnic pro zmenšené měřítko
+                int scaledX = (int) (centerX / scale);
+                int scaledY = (int) ((currentY + 20) / scale);
+
+                guiGraphics.drawString(this.font, itemName, scaledX - (nameWidth / 2), scaledY, 0x404040, false);
+
+                guiGraphics.pose().popPose(); // Vrátíme původní stav
+
+                // 3. Postup (Původní velikost pro ostrou čitelnost)
                 String progress = this.menu.getCurrentAmount(i) + "/" + this.menu.getTargetAmount(i);
                 int progressWidth = this.font.width(progress);
                 guiGraphics.drawString(this.font, progress, centerX - (progressWidth / 2), currentY + 30, 0x404040, false);
@@ -98,8 +116,11 @@ public class StationRequesterScreen extends AbstractContainerScreen<StationReque
 
             // --- PRAVÝ PANEL: Odměna ---
             if (!this.menu.rewardItem.isEmpty()) {
-                guiGraphics.renderItem(this.menu.rewardItem, 170, 40);
-                guiGraphics.drawString(this.font, this.menu.rewardItem.getCount() + "x", 190, 45, 0x404040, false);
+                guiGraphics.renderItem(this.menu.rewardItem, 192 - 8, 40);
+
+                String rewardAmount = this.menu.rewardItem.getCount() + "x";
+                int rewardAmountWidth = this.font.width(rewardAmount);
+                guiGraphics.drawString(this.font, rewardAmount, 192 - (rewardAmountWidth / 2), 60, 0x404040, false);
             }
 
         } else {
