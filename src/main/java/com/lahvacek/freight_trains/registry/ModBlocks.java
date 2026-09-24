@@ -7,6 +7,7 @@ import com.lahvacek.freight_trains.block.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -36,4 +37,11 @@ public class ModBlocks {
     BLOCK_ENTITIES.register("cargo_inspector_be", 
         () -> BlockEntityType.Builder.of(CargoInspectorBlockEntity::new, ModBlocks.CARGO_INSPECTOR.get()).build(null));
 
+    public static final DeferredBlock<LiquidBlock> GOULASH_BLOCK = BLOCKS.register("goulash",
+    () -> new LiquidBlock(
+        ModFluids.GOULASH_SOURCE.get(), // Zdrojová tekutina
+        BlockBehaviour.Properties.ofFullCopy(Blocks.WATER) // Fyzika vody (zvuk atd.)
+            .noLootTable() // Z rozlité tekutiny nesmí nic vypadnout
+    )
+);
 }

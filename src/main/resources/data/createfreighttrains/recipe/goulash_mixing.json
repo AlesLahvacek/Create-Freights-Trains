@@ -1,0 +1,24 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "item": "minecraft:potato"
+    },
+    {
+      "tag": "c:foods/raw_meat"
+    },
+    {
+      "tag": "c:foods/raw_meat"
+    },
+    {
+      "tag": "c:foods/raw_meat"
+    }
+  ],
+  "results": [
+    {
+      "id": "createfreighttrains:goulash",
+      "amount": 250
+    }
+  ],
+  "heatRequirement": "heated"
+}

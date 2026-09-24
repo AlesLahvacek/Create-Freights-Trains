@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import com.lahvacek.freight_trains.registry.ModBlocks;
 import com.lahvacek.freight_trains.registry.ModCapabilities;
+import com.lahvacek.freight_trains.registry.ModFluids;
 import com.lahvacek.freight_trains.registry.ModItems;
 import com.lahvacek.freight_trains.registry.ModMenuTypes;
 import com.mojang.logging.LogUtils;
@@ -50,9 +51,10 @@ public class CreateFreightTrains {
         modEventBus.addListener(ModCapabilities::registerCapabilities);
         NeoForge.EVENT_BUS.addListener(ModCapabilities::onAddReloadListeners);
         ModMenuTypes.MENUS.register(modEventBus);
+        ModFluids.FLUID_TYPES.register(modEventBus);
+        ModFluids.FLUIDS.register(modEventBus);
     }
 
-    
 
     public static final Logger LOGGER = LogUtils.getLogger();
 }
