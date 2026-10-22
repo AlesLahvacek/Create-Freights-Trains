@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.lahvacek.freight_trains.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "JigsawPlacerMixin",
+    "StructureTemplatePoolAccessor"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

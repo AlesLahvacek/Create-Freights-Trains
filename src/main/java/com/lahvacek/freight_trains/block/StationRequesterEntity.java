@@ -17,7 +17,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class StationRequesterEntity extends BlockEntity {
 
@@ -33,6 +33,8 @@ public class StationRequesterEntity extends BlockEntity {
     public final int[] targetAmounts = new int[4];
     public final int[] currentAmounts = new int[4];
     private int stationLevel = 1;
+    private UUID stationId;
+    private BlockPos boundPos;
 
     // --- SYNCHRONIZACE S KLIENTEM ---
     public final ContainerData data = new ContainerData() {
@@ -186,6 +188,12 @@ public class StationRequesterEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putInt("StationLevel", this.stationLevel);
+        if (this.stationId != null) {
+            tag.putUUID("StationId", this.stationId);
+        }
+        if (this.boundPos != null) {
+            tag.putLong("BoundPos", this.boundPos.asLong());
+        }
 
         // Uložení pole předmětů přes ListTag[cite: 4]
         ListTag itemsTag = new ListTag();
@@ -206,6 +214,12 @@ public class StationRequesterEntity extends BlockEntity {
 
         if (tag.contains("StationLevel")) {
             this.stationLevel = tag.getInt("StationLevel");
+        }
+        if (tag.hasUUID("StationId")) {
+            this.stationId = tag.getUUID("StationId");
+        }
+        if (tag.contains("BoundPos", Tag.TAG_LONG)) {
+            this.boundPos = BlockPos.of(tag.getLong("BoundPos"));
         }
 
         // Načtení pole předmětů[cite: 4]
@@ -232,9 +246,22 @@ public class StationRequesterEntity extends BlockEntity {
     @Override
     public void onLoad() {
         super.onLoad();
-        if (this.level != null && !this.level.isClientSide() && this.requestedItems.isEmpty()) {
+        if (this.level == null || this.level.isClientSide()) {
+            return;
+        }
+
+        if (this.stationId == null || this.boundPos == null || !this.getBlockPos().equals(this.boundPos)) {
+            this.stationId = UUID.randomUUID();
+            this.boundPos = this.getBlockPos();
+            generateNewContract();
+            setChanged();
+        } else if (this.requestedItems.isEmpty()) {
             generateNewContract();
         }
+    }
+
+    public UUID getStationId() {
+        return stationId;
     }
 
     public List<ItemStack> getRequestedItems() {

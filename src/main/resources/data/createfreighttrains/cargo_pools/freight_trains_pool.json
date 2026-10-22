@@ -1,0 +1,26 @@
+{
+  "pool_name": "Create: Freight & Trains Items",
+  "entries": [
+    {
+      "item": "createfreighttrains:empty_can",
+      "min_level": 5,
+      "max_level": 15,
+      "min_amount": 64,
+      "max_amount": 512
+    },
+    {
+      "item": "createfreighttrains:canned_beef",
+      "min_level": 8,
+      "max_level": 30,
+      "min_amount": 32,
+      "max_amount": 256
+    },
+    {
+      "item": "createfreighttrains:canned_goulash",
+      "min_level": 10,
+      "max_level": 35,
+      "min_amount": 32,
+      "max_amount": 256
+    }
+  ]
+}
