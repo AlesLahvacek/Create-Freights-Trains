@@ -1,16 +1,25 @@
 package com.lahvacek.freight_trains.mixin;
 
+import com.lahvacek.freight_trains.CreateFreightTrains;
+import com.lahvacek.freight_trains.util.StationAwareList;
+import com.lahvacek.freight_trains.util.StationCandidateTracker;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
 import net.minecraft.world.level.levelgen.structure.pools.JigsawPlacement;
 import net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +48,14 @@ public class JigsawPlacerMixin {
 
         boolean hasStation = alreadyPlaced("createfreighttrains:train_station");
         boolean hasPlot = alreadyPlaced("createfreighttrains:plot_empty");
+        boolean containsStation = originalList.stream()
+                .anyMatch(element -> element.toString().contains("createfreighttrains:train_station"));
+
+        if (containsStation) {
+            CreateFreightTrains.LOGGER.info(
+                    "Village jigsaw candidate: train station, depth={}, existingStation={}, candidates={}",
+                    depth, hasStation, originalList.size());
+        }
 
         originalList.removeIf(element -> {
             String name = element.toString();
@@ -65,10 +82,88 @@ public class JigsawPlacerMixin {
             if (station != null) {
                 originalList.remove(station);
                 originalList.add(0, station);
+                CreateFreightTrains.LOGGER.info(
+                        "Prioritized train station village candidate at depth {}", depth);
             }
         }
 
-        return originalList;
+        return new StationAwareList(originalList);
+    }
+
+    @Inject(method = "tryPlacingChildren", at = @At("RETURN"))
+    private void logStationPlacementResult(
+            PoolElementStructurePiece parent,
+            MutableObject<?> free,
+            int depth,
+            boolean keepJigsaws,
+            net.minecraft.world.level.LevelHeightAccessor heightAccessor,
+            net.minecraft.world.level.levelgen.RandomState randomState,
+            net.minecraft.world.level.levelgen.structure.pools.alias.PoolAliasLookup aliasLookup,
+            net.minecraft.world.level.levelgen.structure.templatesystem.LiquidSettings liquidSettings,
+            CallbackInfo callbackInfo
+    ) {
+        boolean stationPlaced = alreadyPlaced("createfreighttrains:train_station");
+        if (stationPlaced) {
+            CreateFreightTrains.LOGGER.info(
+                    "Train station placement result: placed=true, depth={}, pieces={}",
+                    depth, pieces.size());
+        }
+    }
+
+    @Redirect(
+        method = "tryPlacingChildren",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/level/block/JigsawBlock;canAttach(Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate$StructureBlockInfo;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate$StructureBlockInfo;)Z"
+        )
+    )
+    private boolean logStationAttachment(
+            StructureTemplate.StructureBlockInfo parent,
+            StructureTemplate.StructureBlockInfo candidate
+    ) {
+        boolean canAttach = net.minecraft.world.level.block.JigsawBlock.canAttach(parent, candidate);
+        boolean stationConnector = isStationConnector(candidate);
+        StationCandidateTracker.setStationCandidate(stationConnector && canAttach);
+        if (stationConnector) {
+            CreateFreightTrains.LOGGER.warn(
+                    "Train station jigsaw attachment check: result={}, parent={}, candidate={}",
+                    canAttach, describeJigsaw(parent), describeJigsaw(candidate));
+        }
+        return canAttach;
+    }
+
+    @Redirect(
+        method = "tryPlacingChildren",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/phys/shapes/Shapes;joinIsNotEmpty(Lnet/minecraft/world/phys/shapes/VoxelShape;Lnet/minecraft/world/phys/shapes/VoxelShape;Lnet/minecraft/world/phys/shapes/BooleanOp;)Z"
+        )
+    )
+    private boolean logStationCollision(VoxelShape first, VoxelShape second, BooleanOp operation) {
+        boolean intersects = Shapes.joinIsNotEmpty(first, second, operation);
+        boolean stationCandidate = StationCandidateTracker.isStationCandidate();
+        StationCandidateTracker.setStationCandidate(false);
+        if (intersects && operation == BooleanOp.ONLY_SECOND && stationCandidate) {
+            CreateFreightTrains.LOGGER.warn(
+                    "Train station bounding-box collision ignored");
+            return false;
+        }
+        return intersects;
+    }
+
+    private boolean isStationConnector(StructureTemplate.StructureBlockInfo info) {
+        String name = info.nbt().getString("name");
+        String target = info.nbt().getString("target");
+        return "minecraft:building_entrance".equals(name) && "minecraft:empty".equals(target);
+    }
+
+    private String describeJigsaw(StructureTemplate.StructureBlockInfo info) {
+        return "{pos=" + info.pos()
+                + ", name=" + info.nbt().getString("name")
+                + ", target=" + info.nbt().getString("target")
+                + ", pool=" + info.nbt().getString("pool")
+                + ", facing=" + net.minecraft.world.level.block.JigsawBlock.getFrontFacing(info.state())
+                + "}";
     }
 
     private boolean alreadyPlaced(String idSubstring) {
