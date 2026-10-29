@@ -31,21 +31,21 @@
     },
     {
       "item": "create:brass_ingot",
-      "min_level": 8,
+      "min_level": 5,
       "max_level": 50,
       "min_amount": 64,
       "max_amount": 256
     },
     {
       "item": "create:electron_tube",
-      "min_level": 12,
+      "min_level": 10,
       "max_level": 50,
       "min_amount": 32,
       "max_amount": 128
     },
     {
       "item": "create:brass_casing",
-      "min_level": 15,
+      "min_level": 10,
       "max_level": 50,
       "min_amount": 32,
       "max_amount": 128
@@ -59,7 +59,7 @@
     },
     {
       "item": "create:sturdy_sheet",
-      "min_level": 25,
+      "min_level": 15,
       "max_level": 50,
       "min_amount": 16,
       "max_amount": 64

@@ -10,6 +10,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.StructureTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.ContainerData;
@@ -18,8 +20,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.level.block.Rotation;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +41,12 @@ public class StationRequesterEntity extends BlockEntity {
     private int stationLevel = 1;
     private UUID stationId;
     private BlockPos boundPos;
+
+    // --- HODNOTY PRO PLOT ---
+    private BlockPos plotPos = null;
+    private Rotation plotRotation = Rotation.NONE;
+    private String plotType = "empty"; // "empty", "mine", "farm",...
+    private int plotTier = 0;
 
     // --- SYNCHRONIZACE S KLIENTEM ---
     public final ContainerData data = new ContainerData() {
@@ -85,9 +97,12 @@ public class StationRequesterEntity extends BlockEntity {
             CargoEntry chosen = availablePool.get(i);
             ResourceLocation itemId = ResourceLocation.parse(chosen.itemId());
             Item item = BuiltInRegistries.ITEM.get(itemId);
-
-            int amount = chosen.minAmount() + random.nextInt((chosen.maxAmount() - chosen.minAmount()) + 1);
-
+            int amount = 0;
+            if (stationLevel < 3) {
+                amount = chosen.minAmount() + random.nextInt((((int)chosen.maxAmount()/2) - ((int)chosen.minAmount()/2)) + 1);
+            }else{
+                amount = chosen.minAmount() + random.nextInt((chosen.maxAmount() - chosen.minAmount()) + 1);
+            }
             this.requestedItems.add(new ItemStack(item));
             this.targetAmounts[i] = amount;
         }
@@ -183,6 +198,31 @@ public class StationRequesterEntity extends BlockEntity {
         }
     }
 
+    // --- DATA EMPTY PLOTU ---
+    public void findVillagePlot() { // Finds empty plot in train station's generated village
+    if (!(this.level instanceof ServerLevel serverLevel) || this.plotPos != null) return;
+
+    // Získáme strukturu vesnice, ve které se tento StationRequester nachází
+    StructureStart start = serverLevel.structureManager().getStructureWithPieceAt(this.worldPosition, StructureTags.VILLAGE);
+
+    if (start.isValid()) {
+        for (StructurePiece piece : start.getPieces()) {
+            if (piece instanceof PoolElementStructurePiece poolPiece) {
+                String pieceName = poolPiece.getElement().toString();
+
+                // Hledáme náš dílek prázdné parcely
+                if (pieceName.contains("createfreighttrains:plot_empty")) {
+                    this.plotPos = poolPiece.getPosition();
+                    this.plotRotation = poolPiece.getRotation();
+                    this.setChanged();
+                    System.out.println("Found parcel at: " + this.plotPos + " rotation: " + this.plotRotation);
+                    break;
+                }
+            }
+        }
+    }
+}
+
     // --- SERIALIZACE (Ukládání na disk) ---
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
@@ -194,6 +234,16 @@ public class StationRequesterEntity extends BlockEntity {
         if (this.boundPos != null) {
             tag.putLong("BoundPos", this.boundPos.asLong());
         }
+
+        if (this.boundPos != null) {
+            tag.putLong("BoundPos", this.boundPos.asLong());
+        }
+        if (this.plotPos != null) {
+            tag.putLong("PlotPos", this.plotPos.asLong());
+        }
+        tag.putString("PlotRotation", this.plotRotation.name());
+        tag.putString("PlotType", this.plotType);
+        tag.putInt("PlotTier", this.plotTier);
 
         // Uložení pole předmětů přes ListTag[cite: 4]
         ListTag itemsTag = new ListTag();
@@ -240,23 +290,51 @@ public class StationRequesterEntity extends BlockEntity {
             int[] loadedCurrents = tag.getIntArray("CurrentAmounts");
             System.arraycopy(loadedCurrents, 0, this.currentAmounts, 0, Math.min(loadedCurrents.length, 4));
         }
+
+        if (tag.contains("BoundPos")) {
+            this.boundPos = BlockPos.of(tag.getLong("BoundPos"));
+        }
+        if (tag.contains("PlotPos")) {
+            this.plotPos = BlockPos.of(tag.getLong("PlotPos"));
+        } else {
+            this.plotPos = null;
+        }
+
+        if (tag.contains("PlotRotation")) {
+            try {
+                this.plotRotation = Rotation.valueOf(tag.getString("PlotRotation"));
+            } catch (IllegalArgumentException e) {
+                this.plotRotation = Rotation.NONE;
+            }
+        }
+
+        if (tag.contains("PlotType")) {
+            this.plotType = tag.getString("PlotType");
+        }
+        if (tag.contains("PlotTier")) {
+            this.plotTier = tag.getInt("PlotTier");
+        }
     }
 
     // --- SPUŠTĚNÍ PŘI POLOŽENÍ ---
     @Override
     public void onLoad() {
         super.onLoad();
-        if (this.level == null || this.level.isClientSide()) {
-            return;
-        }
-
-        if (this.stationId == null || this.boundPos == null || !this.getBlockPos().equals(this.boundPos)) {
-            this.stationId = UUID.randomUUID();
-            this.boundPos = this.getBlockPos();
-            generateNewContract();
-            setChanged();
-        } else if (this.requestedItems.isEmpty()) {
-            generateNewContract();
+        if (this.level != null && !this.level.isClientSide()) {
+            if (!this.getBlockPos().equals(this.boundPos)) {
+                this.boundPos = this.getBlockPos();
+                this.plotPos = null;
+                this.plotRotation = Rotation.NONE;
+                this.plotType = "empty";
+                this.plotTier = 0;
+                this.generateNewContract();
+                this.setChanged();
+            } else if (this.requestedItems.isEmpty()) {
+                this.generateNewContract();
+            }
+            if (this.plotPos == null) {
+                findVillagePlot();
+            }
         }
     }
 

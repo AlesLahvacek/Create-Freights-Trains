@@ -40,6 +40,7 @@ public class StructureInjectionHandler {
         }
 
         addPieceToPool(pool, "createfreighttrains:train_station", 50);
+        addPieceToPool(pool, "createfreighttrains:plot_empty", 50);
         CreateFreightTrains.LOGGER.info("Injected train station into village pool {}", poolId);
     }
 

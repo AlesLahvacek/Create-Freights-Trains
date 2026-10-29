@@ -52,7 +52,7 @@
     },
     {
       "item": "minecraft:diamond",
-      "min_level": 15,
+      "min_level": 10,
       "max_level": 50,
       "min_amount": 8,
       "max_amount": 32
@@ -94,14 +94,14 @@
     },
     {
       "item": "minecraft:pumpkin",
-      "min_level": 3,
+      "min_level": 5,
       "max_level": 30,
       "min_amount": 32,
       "max_amount": 128
     },
     {
       "item": "minecraft:melon_slice",
-      "min_level": 3,
+      "min_level": 5,
       "max_level": 30,
       "min_amount": 128,
       "max_amount": 512
@@ -150,7 +150,7 @@
     },
     {
       "item": "minecraft:ender_pearl",
-      "min_level": 20,
+      "min_level": 15,
       "max_level": 50,
       "min_amount": 16,
       "max_amount": 64
