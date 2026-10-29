@@ -1,6 +1,7 @@
 package com.lahvacek.freight_trains.registry;
 
 import com.lahvacek.freight_trains.util.CargoPoolManager;
+import com.lahvacek.freight_trains.util.RewardPoolManager;
 
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -17,6 +18,7 @@ public class ModCapabilities {
 
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
         event.addListener(CargoPoolManager.INSTANCE);
+        event.addListener(RewardPoolManager.INSTANCE);
     }
     
 }

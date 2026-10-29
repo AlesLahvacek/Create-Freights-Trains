@@ -13,7 +13,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.world.item.Items;
 
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -63,8 +62,7 @@ public class StationRequesterBlock extends BaseEntityBlock{
                 // int current = requester.getCurrentAmount();
                 // int target = requester.getTargetAmount();
 
-                // ZATÍM PROVIZORNÍ ODMĚNA (Zůstává)
-                ItemStack reward = new ItemStack(Items.EMERALD, 5);
+                ItemStack reward = requester.getRewardItem();
 
                 // Zavoláme NeoForge API pro otevření okna
                 serverPlayer.openMenu(new MenuProvider() {

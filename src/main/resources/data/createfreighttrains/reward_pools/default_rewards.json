@@ -1,0 +1,19 @@
+{
+  "pool_name": "Default Rewards",
+  "entries": [
+    {
+      "item": "minecraft:emerald",
+      "min_level": 1,
+      "max_level": 50,
+      "min_amount": 4,
+      "max_amount": 8
+    },
+    {
+      "item": "minecraft:diamond",
+      "min_level": 1,
+      "max_level": 50,
+      "min_amount": 3,
+      "max_amount": 6
+    }
+  ]
+}
