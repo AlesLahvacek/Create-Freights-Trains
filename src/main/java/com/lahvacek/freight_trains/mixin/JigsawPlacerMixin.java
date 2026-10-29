@@ -30,6 +30,9 @@ public class JigsawPlacerMixin {
     @Shadow @Final
     private List<? super PoolElementStructurePiece> pieces;
 
+    @Shadow @Final
+    private int maxDepth;
+
     @Redirect(
         method = "tryPlacingChildren",
         at = @At(
@@ -63,7 +66,7 @@ public class JigsawPlacerMixin {
             // Nádraží: Max 1x ve vesnici. Je v houses poolu, který se vybírá už
             // při prvním rozšíření vesnice, proto zde nesmí být depth limit.
             if (name.contains("createfreighttrains:train_station")) {
-                return hasStation;
+                return hasStation || depth < maxDepth - 1;
             }
 
             // Parcela (připraveno na další krok): Max 1x ve vesnici
@@ -74,7 +77,7 @@ public class JigsawPlacerMixin {
             return false;
         });
 
-        if (!hasStation) {
+        if (!hasStation && depth >= maxDepth - 1) {
             StructurePoolElement station = originalList.stream()
                     .filter(element -> element.toString().contains("createfreighttrains:train_station"))
                     .findFirst()
@@ -139,13 +142,13 @@ public class JigsawPlacerMixin {
             target = "Lnet/minecraft/world/phys/shapes/Shapes;joinIsNotEmpty(Lnet/minecraft/world/phys/shapes/VoxelShape;Lnet/minecraft/world/phys/shapes/VoxelShape;Lnet/minecraft/world/phys/shapes/BooleanOp;)Z"
         )
     )
-    private boolean logStationCollision(VoxelShape first, VoxelShape second, BooleanOp operation) {
+    private boolean allowStationCollision(VoxelShape first, VoxelShape second, BooleanOp operation) {
         boolean intersects = Shapes.joinIsNotEmpty(first, second, operation);
         boolean stationCandidate = StationCandidateTracker.isStationCandidate();
         StationCandidateTracker.setStationCandidate(false);
         if (intersects && operation == BooleanOp.ONLY_SECOND && stationCandidate) {
             CreateFreightTrains.LOGGER.warn(
-                    "Train station bounding-box collision ignored");
+                    "Train station collision ignored at the village edge");
             return false;
         }
         return intersects;

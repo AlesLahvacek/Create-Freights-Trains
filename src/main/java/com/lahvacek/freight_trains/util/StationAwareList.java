@@ -14,8 +14,7 @@ public final class StationAwareList extends ArrayList<StructurePoolElement> {
     @Override
     public StructurePoolElement get(int index) {
         StructurePoolElement element = super.get(index);
-        StationCandidateTracker.setStationCandidate(
-                element.toString().contains("createfreighttrains:train_station"));
+        StationCandidateTracker.setStationCandidate(isStation(element));
         return element;
     }
 
@@ -31,8 +30,7 @@ public final class StationAwareList extends ArrayList<StructurePoolElement> {
             @Override
             public StructurePoolElement next() {
                 StructurePoolElement element = delegate.next();
-                StationCandidateTracker.setStationCandidate(
-                        element.toString().contains("createfreighttrains:train_station"));
+                StationCandidateTracker.setStationCandidate(isStation(element));
                 return element;
             }
 
@@ -41,5 +39,9 @@ public final class StationAwareList extends ArrayList<StructurePoolElement> {
                 delegate.remove();
             }
         };
+    }
+
+    private static boolean isStation(StructurePoolElement element) {
+        return element.toString().contains("createfreighttrains:train_station");
     }
 }
