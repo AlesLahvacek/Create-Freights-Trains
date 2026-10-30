@@ -114,13 +114,20 @@ public class StationRequesterScreen extends AbstractContainerScreen<StationReque
                 guiGraphics.drawString(this.font, progress, centerX - (progressWidth / 2), currentY + 30, 0x404040, false);
             }
 
-            // --- PRAVÝ PANEL: Odměna ---
-            if (!this.menu.rewardItem.isEmpty()) {
-                guiGraphics.renderItem(this.menu.rewardItem, 192 - 8, 40);
+            // --- PRAVÝ PANEL: Odměny ---
+            int rewardStartY = 35;
+            int rewardSpacing = 45;
+            for (int i = 0; i < this.menu.rewardItems.size(); i++) {
+                ItemStack reward = this.menu.rewardItems.get(i);
+                if (reward.isEmpty()) continue;
 
-                String rewardAmount = this.menu.rewardItem.getCount() + "x";
+                int rewardY = rewardStartY + (i * rewardSpacing);
+                guiGraphics.renderItem(reward, 192 - 8, rewardY);
+
+                String rewardAmount = reward.getCount() + "x";
                 int rewardAmountWidth = this.font.width(rewardAmount);
-                guiGraphics.drawString(this.font, rewardAmount, 192 - (rewardAmountWidth / 2), 60, 0x404040, false);
+                guiGraphics.drawString(this.font, rewardAmount, 192 - (rewardAmountWidth / 2),
+                        rewardY + 20, 0x404040, false);
             }
 
         } else {

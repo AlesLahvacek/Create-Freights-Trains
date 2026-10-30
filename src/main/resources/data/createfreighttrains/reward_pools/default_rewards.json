@@ -3,17 +3,24 @@
   "entries": [
     {
       "item": "minecraft:emerald",
-      "min_level": 1,
-      "max_level": 50,
+      "min_level": 3,
+      "max_level": 5,
       "min_amount": 4,
       "max_amount": 8
     },
     {
       "item": "minecraft:diamond",
       "min_level": 1,
-      "max_level": 50,
-      "min_amount": 3,
-      "max_amount": 6
+      "max_level": 5,
+      "min_amount": 2,
+      "max_amount": 5
+    },
+    {
+      "item": "minecraft:experience_bottle",
+      "min_level": 3,
+      "max_level": 10,
+      "min_amount": 2,
+      "max_amount": 5
     }
   ]
 }

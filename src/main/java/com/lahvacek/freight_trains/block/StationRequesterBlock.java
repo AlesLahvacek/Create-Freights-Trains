@@ -10,6 +10,8 @@ import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.List;
 import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,7 +64,7 @@ public class StationRequesterBlock extends BaseEntityBlock{
                 // int current = requester.getCurrentAmount();
                 // int target = requester.getTargetAmount();
 
-                ItemStack reward = requester.getRewardItem();
+                List<ItemStack> rewards = requester.getRewardItems();
 
                 // Zavoláme NeoForge API pro otevření okna
                 serverPlayer.openMenu(new MenuProvider() {
@@ -74,7 +76,7 @@ public class StationRequesterBlock extends BaseEntityBlock{
                     @Override
                     public AbstractContainerMenu createMenu(int windowId, Inventory inv, Player player) {
                         // Předáváme CELÝ SEZNAM (requester.requestedItems) a naše upravená data
-                        return new StationRequesterMenu(windowId, inv, requester.requestedItems, reward, requester.data);
+                        return new StationRequesterMenu(windowId, inv, requester.requestedItems, rewards, requester.data);
                     }
                 }, buffer -> {
                     // Pošleme klientovi nejdřív počet itemů a pak jeden po druhém
@@ -82,8 +84,10 @@ public class StationRequesterBlock extends BaseEntityBlock{
                     for (ItemStack item : requester.requestedItems) {
                         ItemStack.STREAM_CODEC.encode(buffer, item);
                     }
-                    // Nakonec pošleme odměnu
-                    ItemStack.STREAM_CODEC.encode(buffer, reward);
+                    buffer.writeInt(rewards.size());
+                    for (ItemStack reward : rewards) {
+                        ItemStack.STREAM_CODEC.encode(buffer, reward);
+                    }
                 });
             }
         }

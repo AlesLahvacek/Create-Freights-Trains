@@ -39,7 +39,7 @@ public class StationRequesterEntity extends BlockEntity {
 
     // --- DATOVÝ MODEL (Až 4 položky) ---
     public final List<ItemStack> requestedItems = new ArrayList<>();
-    private ItemStack rewardItem = ItemStack.EMPTY;
+    private final List<ItemStack> rewardItems = new ArrayList<>();
     public final int[] targetAmounts = new int[4];
     public final int[] currentAmounts = new int[4];
     private int stationLevel = 1;
@@ -90,7 +90,34 @@ public class StationRequesterEntity extends BlockEntity {
         List<CargoEntry> availablePool = new ArrayList<>(CargoPoolManager.INSTANCE.getPoolForLevel(this.stationLevel));
         if (availablePool.isEmpty()) return;
 
-        this.rewardItem = createRewardForLevel(this.stationLevel);
+        if (!RewardPoolManager.INSTANCE.hasAnyEntries() && this.level != null) {
+            RewardPoolManager.INSTANCE.loadFromResources(this.level.getServer().getResourceManager());
+        }
+        int rewardCount = random.nextInt(3) + 1;
+        switch (stationLevel) {
+            case 1,2:
+                rewardCount = 1;
+                break;
+            case 3:
+                rewardCount = 2;
+                break;
+            case 4,5:
+                rewardCount = 3;
+                break;
+            default:
+                break;
+        }
+        this.rewardItems.clear();
+        List<RewardEntry> availableRewards = new ArrayList<>(
+                RewardPoolManager.INSTANCE.getPoolForLevel(this.stationLevel));
+        Collections.shuffle(availableRewards);
+        rewardCount = Math.min(rewardCount, availableRewards.size());
+        for (int i = 0; i < rewardCount; i++) {
+            ItemStack reward = createReward(availableRewards.get(i));
+            if (!reward.isEmpty()) {
+                this.rewardItems.add(reward);
+            }
+        }
         Collections.shuffle(availablePool); // Zamícháme pro náhodný výběr[cite: 4]
 
         // Zvolíme 2 až 4 různé položky
@@ -192,37 +219,33 @@ public class StationRequesterEntity extends BlockEntity {
     }
 
     private void spawnReward() { // spawn reward from chosen JSON
-        if (rewardItem.isEmpty()) return;
-
-        ItemEntity rewardEntity = new ItemEntity(this.level,
-                getBlockPos().getX() + 0.5,
-                getBlockPos().getY() + 1.2,
-                getBlockPos().getZ() + 0.5,
-                rewardItem.copy());
-        rewardEntity.setDeltaMovement(0, 0.2, 0);
-        this.level.addFreshEntity(rewardEntity);
+        for (ItemStack rewardItem : this.rewardItems) {
+            ItemEntity rewardEntity = new ItemEntity(this.level,
+                    getBlockPos().getX() + 0.5,
+                    getBlockPos().getY() + 1.2,
+                    getBlockPos().getZ() + 0.5,
+                    rewardItem.copy());
+            rewardEntity.setDeltaMovement(0, 0.2, 0);
+            this.level.addFreshEntity(rewardEntity);
+        }
     }
 
-    private ItemStack createRewardForLevel(int level) {
+    private ItemStack createReward(RewardEntry chosen) {
         if (!RewardPoolManager.INSTANCE.hasAnyEntries() && this.level != null) {
             RewardPoolManager.INSTANCE.loadFromResources(this.level.getServer().getResourceManager());
         }
 
-        List<RewardEntry> availableRewards = RewardPoolManager.INSTANCE.getPoolForLevel(level);
-        if (availableRewards.isEmpty()) {
-            System.err.println("No reward pool entries available for station level " + level + ".");
-            return ItemStack.EMPTY;
-        }
-
-        RandomSource random = (this.level != null) ? this.level.random : RandomSource.create();
-        RewardEntry chosen = availableRewards.get(random.nextInt(availableRewards.size()));
         Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(chosen.itemId()));
         if (item == Items.AIR) {
             System.err.println("Reward pool contains unknown item: " + chosen.itemId());
             return ItemStack.EMPTY;
         }
 
+        RandomSource random = (this.level != null) ? this.level.random : RandomSource.create();
         int amount = chosen.minAmount() + random.nextInt(chosen.maxAmount() - chosen.minAmount() + 1);
+        if (stationLevel > 5) {
+            amount = amount*2;
+        }
         return new ItemStack(item, amount);
     }
 
@@ -281,9 +304,13 @@ public class StationRequesterEntity extends BlockEntity {
             }
         }
         tag.put("RequestedItems", itemsTag);
-        if (!this.rewardItem.isEmpty()) {
-            tag.put("RewardItem", this.rewardItem.save(registries));
+        ListTag rewardsTag = new ListTag();
+        for (ItemStack reward : this.rewardItems) {
+            if (!reward.isEmpty()) {
+                rewardsTag.add(reward.save(registries));
+            }
         }
+        tag.put("RewardItems", rewardsTag);
 
         // Uložení číselných polí
         tag.putIntArray("TargetAmounts", this.targetAmounts);
@@ -313,8 +340,20 @@ public class StationRequesterEntity extends BlockEntity {
                 this.requestedItems.add(ItemStack.parse(registries, itemsTag.getCompound(i)).orElse(ItemStack.EMPTY));
             }
         }
-        if (tag.contains("RewardItem", Tag.TAG_COMPOUND)) {
-            this.rewardItem = ItemStack.parse(registries, tag.getCompound("RewardItem")).orElse(ItemStack.EMPTY);
+        this.rewardItems.clear();
+        if (tag.contains("RewardItems", Tag.TAG_LIST)) {
+            ListTag rewardsTag = tag.getList("RewardItems", Tag.TAG_COMPOUND);
+            for (int i = 0; i < rewardsTag.size(); i++) {
+                ItemStack reward = ItemStack.parse(registries, rewardsTag.getCompound(i)).orElse(ItemStack.EMPTY);
+                if (!reward.isEmpty()) {
+                    this.rewardItems.add(reward);
+                }
+            }
+        } else if (tag.contains("RewardItem", Tag.TAG_COMPOUND)) {
+            ItemStack reward = ItemStack.parse(registries, tag.getCompound("RewardItem")).orElse(ItemStack.EMPTY);
+            if (!reward.isEmpty()) {
+                this.rewardItems.add(reward);
+            }
         }
 
         // Načtení číselných polí
@@ -367,8 +406,8 @@ public class StationRequesterEntity extends BlockEntity {
                 this.setChanged();
             } else if (this.requestedItems.isEmpty()) {
                 this.generateNewContract();
-            } else if (this.rewardItem.isEmpty()) {
-                this.rewardItem = createRewardForLevel(this.stationLevel);
+            } else if (this.rewardItems.isEmpty()) {
+                generateNewContract();
                 this.setChanged();
             }
             if (this.plotPos == null) {
@@ -385,8 +424,8 @@ public class StationRequesterEntity extends BlockEntity {
         return requestedItems;
     }
 
-    public ItemStack getRewardItem() {
-        return rewardItem;
+    public List<ItemStack> getRewardItems() {
+        return rewardItems;
     }
 
     public int[] getTargetAmount() {

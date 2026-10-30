@@ -15,7 +15,7 @@ import net.minecraft.world.item.ItemStack;
 public class StationRequesterMenu extends AbstractContainerMenu {
 
     public final List<ItemStack> requestedItems = new ArrayList<>();
-    public final ItemStack rewardItem;
+    public final List<ItemStack> rewardItems = new ArrayList<>();
     private final ContainerData data;
 
     // Konstruktor volaný na KLIENTOVI
@@ -27,16 +27,20 @@ public class StationRequesterMenu extends AbstractContainerMenu {
             this.requestedItems.add(ItemStack.STREAM_CODEC.decode(buf));
         }
 
-        this.rewardItem = ItemStack.STREAM_CODEC.decode(buf);
+        int rewardCount = buf.readInt();
+        for (int i = 0; i < rewardCount; i++) {
+            this.rewardItems.add(ItemStack.STREAM_CODEC.decode(buf));
+        }
         this.data = new SimpleContainerData(8);
         this.addDataSlots(this.data);
     }
 
     // Konstruktor volaný na SERVERU
-    public StationRequesterMenu(int windowId, Inventory playerInventory, List<ItemStack> reqItems, ItemStack rewItem, ContainerData data) {
+    public StationRequesterMenu(int windowId, Inventory playerInventory, List<ItemStack> reqItems,
+                                List<ItemStack> rewItems, ContainerData data) {
         super(ModMenuTypes.STATION_REQUESTER_MENU.get(), windowId);
         this.requestedItems.addAll(reqItems);
-        this.rewardItem = rewItem;
+        this.rewardItems.addAll(rewItems);
         this.data = data;
         this.addDataSlots(this.data);
     }
