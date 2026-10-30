@@ -79,8 +79,8 @@ public class StationRequesterScreen extends AbstractContainerScreen<StationReque
             int colSpacing = 56;
             int rowSpacing = 45;
 
-            for (int i = 0; i < this.menu.requestedItems.size(); i++) {
-                ItemStack item = this.menu.requestedItems.get(i);
+            for (int i = 0; i < 4; i++) {
+                ItemStack item = this.menu.getRequestedItem(i);
                 if (item.isEmpty()) continue;
 
                 int col = i % 2;
@@ -115,18 +115,21 @@ public class StationRequesterScreen extends AbstractContainerScreen<StationReque
             }
 
             // --- PRAVÝ PANEL: Odměny ---
+            int rewardStartX = 170;
+            int rewardColumnSpacing = 44;
             int rewardStartY = 35;
-            int rewardSpacing = 45;
-            for (int i = 0; i < this.menu.rewardItems.size(); i++) {
-                ItemStack reward = this.menu.rewardItems.get(i);
+            int rewardRowSpacing = 45;
+            for (int i = 0; i < 3; i++) {
+                ItemStack reward = this.menu.getRewardItem(i);
                 if (reward.isEmpty()) continue;
 
-                int rewardY = rewardStartY + (i * rewardSpacing);
-                guiGraphics.renderItem(reward, 192 - 8, rewardY);
+                int rewardCenterX = rewardStartX + ((i % 2) * rewardColumnSpacing);
+                int rewardY = rewardStartY + ((i / 2) * rewardRowSpacing);
+                guiGraphics.renderItem(reward, rewardCenterX - 8, rewardY);
 
                 String rewardAmount = reward.getCount() + "x";
                 int rewardAmountWidth = this.font.width(rewardAmount);
-                guiGraphics.drawString(this.font, rewardAmount, 192 - (rewardAmountWidth / 2),
+                guiGraphics.drawString(this.font, rewardAmount, rewardCenterX - (rewardAmountWidth / 2),
                         rewardY + 20, 0x404040, false);
             }
 

@@ -76,7 +76,8 @@ public class StationRequesterBlock extends BaseEntityBlock{
                     @Override
                     public AbstractContainerMenu createMenu(int windowId, Inventory inv, Player player) {
                         // Předáváme CELÝ SEZNAM (requester.requestedItems) a naše upravená data
-                        return new StationRequesterMenu(windowId, inv, requester.requestedItems, rewards, requester.data);
+                        return new StationRequesterMenu(windowId, inv, requester.requestedItems, rewards,
+                                requester.data, requester);
                     }
                 }, buffer -> {
                     // Pošleme klientovi nejdřív počet itemů a pak jeden po druhém
