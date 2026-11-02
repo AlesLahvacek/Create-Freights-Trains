@@ -27,8 +27,6 @@ public class ModFluids {
 
     // Propojení tekutiny s kbelíkem a blokem
     private static BaseFlowingFluid.Properties createProperties() {
-        return new BaseFlowingFluid.Properties(GOULASH_TYPE, GOULASH_SOURCE, GOULASH_FLOWING)
-                .bucket(ModItems.GOULASH_BUCKET)
-                .block(ModBlocks.GOULASH_BLOCK);
+        return new BaseFlowingFluid.Properties(GOULASH_TYPE, GOULASH_SOURCE, GOULASH_FLOWING);
     }
 }

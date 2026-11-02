@@ -38,7 +38,7 @@ public class StationRequesterMenu extends AbstractContainerMenu {
         }
         this.requester = null;
         syncContractItems();
-        this.data = new SimpleContainerData(8);
+        this.data = new SimpleContainerData(9);
         this.addDataSlots(this.data);
         addContractSlots();
     }
@@ -101,6 +101,7 @@ public class StationRequesterMenu extends AbstractContainerMenu {
     // Pomocné metody pro Screen
     public int getCurrentAmount(int index) { return this.data.get(index); }
     public int getTargetAmount(int index) { return this.data.get(index + 4); }
+    public int getStationLevel() { return this.data.get(8); }
 
 
 

@@ -9,5 +9,20 @@
   "createfreighttrains.configuration.items": "Item List",
   "createfreighttrains.configuration.logDirtBlock": "Log Dirt Block",
   "createfreighttrains.configuration.magicNumberIntroduction": "Magic Number Text",
-  "createfreighttrains.configuration.magicNumber": "Magic Number"
+  "createfreighttrains.configuration.magicNumber": "Magic Number",
+
+  "item.createfreighttrains.canned_goulash": "Canned Goulash",
+  "item.createfreighttrains.canned_beef": "Canned Beef",
+  "item.createfreighttrains.empty_can": "Empty Can",
+  "item.createfreighttrains.incomplete_canned_food": "Incomplete Canned Food",
+  "item.createfreighttrains.destination_card": "Destination Card",
+  "item.createfreighttrains.waybill_item": "Waybill",
+  "item.createfreighttrains.passenger_token": "Passenger Token",
+
+  "block.createfreighttrains.station_requester": "Station Requester",
+  "block.createfreighttrains.cargo_inspector": "Cargo Inspector",
+  "block.createfreighttrains.depot_terminal": "Depot Terminal",
+
+  "fluid_type.createfreighttrains.goulash": "Goulash"
+
 }

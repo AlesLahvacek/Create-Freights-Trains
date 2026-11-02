@@ -133,6 +133,9 @@ public class StationRequesterScreen extends AbstractContainerScreen<StationReque
                         rewardY + 20, 0x404040, false);
             }
 
+            guiGraphics.drawString(this.font, "LEVEL: " + this.menu.getStationLevel(),
+                    25, 160, 0x202020, false);
+
         } else {
             // --- JSME NA ZÁLOŽCE UPGRADE ---
             String comingSoon = "Upgrade panel - Ve vývoji";

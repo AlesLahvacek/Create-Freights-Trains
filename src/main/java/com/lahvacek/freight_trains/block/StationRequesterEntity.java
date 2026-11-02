@@ -58,6 +58,7 @@ public class StationRequesterEntity extends BlockEntity {
         public int get(int index) {
             if (index < 4) return currentAmounts[index]; // Index 0-3: Current Amount
             if (index < 8) return targetAmounts[index - 4]; // Index 4-7: Target Amount
+            if (index == 8) return stationLevel;
             return 0;
         }
 
@@ -65,10 +66,11 @@ public class StationRequesterEntity extends BlockEntity {
         public void set(int index, int value) {
             if (index < 4) currentAmounts[index] = value;
             else if (index < 8) targetAmounts[index - 4] = value;
+            else if (index == 8) stationLevel = value;
         }
 
         @Override
-        public int getCount() { return 8; }
+        public int getCount() { return 9; }
     };
 
     public StationRequesterEntity(BlockPos pos, BlockState state) {
