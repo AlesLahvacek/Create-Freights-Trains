@@ -51,5 +51,9 @@ public class ModItems {
     "canned_goulash",
     props -> new CannedFoodItem(props, 20, 1.0f, false, () -> new MobEffectInstance(MobEffects.SATURATION, 200, 0))
 );
+    public  static final DeferredItem<Item> CANNED_APPLE_JUICE = ITEMS.registerItem(
+    "canned_apple_juice",
+    props -> new CannedFoodItem(props, 10, 0.7f)
+);
 
 }
