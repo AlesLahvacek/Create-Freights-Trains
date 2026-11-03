@@ -9,6 +9,8 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
@@ -53,6 +55,19 @@ public class StationRequesterBlock extends BaseEntityBlock{
   }
 
   @Override
+  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+          Level level, BlockState state, BlockEntityType<T> type) {
+    if (level.isClientSide()) {
+      return null;
+    }
+    return (lvl, pos, st, blockEntity) -> {
+      if (blockEntity instanceof StationRequesterEntity requester) {
+        StationRequesterEntity.serverTick(lvl, pos, st, requester);
+      }
+    };
+  }
+
+  @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (!level.isClientSide()) {
             BlockEntity be = level.getBlockEntity(pos);
@@ -64,7 +79,9 @@ public class StationRequesterBlock extends BaseEntityBlock{
                 // int current = requester.getCurrentAmount();
                 // int target = requester.getTargetAmount();
 
-                List<ItemStack> rewards = requester.getRewardItems();
+                ItemStack reward = requester.getRewardItems().isEmpty()
+                        ? ItemStack.EMPTY
+                        : requester.getRewardItems().get(0);
 
                 // Zavoláme NeoForge API pro otevření okna
                 serverPlayer.openMenu(new MenuProvider() {
@@ -75,20 +92,27 @@ public class StationRequesterBlock extends BaseEntityBlock{
 
                     @Override
                     public AbstractContainerMenu createMenu(int windowId, Inventory inv, Player player) {
-                        // Předáváme CELÝ SEZNAM (requester.requestedItems) a naše upravená data
-                        return new StationRequesterMenu(windowId, inv, requester.requestedItems, rewards,
-                                requester.data, requester);
+                        return new StationRequesterMenu(
+                                windowId, inv, pos,
+                                requester.requestedItems,
+                                requester.upgradeRequestedItems,
+                                reward, requester.data
+                        );
                     }
                 }, buffer -> {
-                    // Pošleme klientovi nejdřív počet itemů a pak jeden po druhém
+                    buffer.writeBlockPos(pos);
+
                     buffer.writeInt(requester.requestedItems.size());
                     for (ItemStack item : requester.requestedItems) {
                         ItemStack.STREAM_CODEC.encode(buffer, item);
                     }
-                    buffer.writeInt(rewards.size());
-                    for (ItemStack reward : rewards) {
-                        ItemStack.STREAM_CODEC.encode(buffer, reward);
+
+                    buffer.writeInt(requester.upgradeRequestedItems.size());
+                    for (ItemStack item : requester.upgradeRequestedItems) {
+                        ItemStack.STREAM_CODEC.encode(buffer, item);
                     }
+
+                    ItemStack.STREAM_CODEC.encode(buffer, reward);
                 });
             }
         }
